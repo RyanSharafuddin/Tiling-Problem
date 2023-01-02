@@ -76,8 +76,8 @@ def getPotentialL_tileLocations(L_tile_combo):
         See potentialL_tileLocations.txt for example for a width 4 height 2 grid.
         potential_L_tile_locations - list of 4 lists, each corresponding to a L_tile type
         potential_L_tile_locations[i] - list of tuples for L_tile type i, where each tuple is a combination of coords for that L_tile type
-        potential_L_tile_locations[i][j] - a tuple of coords, corresponding to a combo of locations for L_tile type i.
-        potential_L_tile_locations[i][j][k] - a coord in combo j for tile i (can be empty if that tile is not used)
+        potential_L_tile_locations[i][j] - a tuple of coords, corresponding to a combo of locations for L_tile type i. (can be empty tuple if that tile is not used - empty combo)
+        potential_L_tile_locations[i][j][k] - a coord in combo j for tile i 
     """
     print(f"L_tile_combo: {L_tile_combo}")
     nums_of_each_L_tile = getNumsOfEachL_tile(L_tile_combo)
@@ -125,7 +125,7 @@ def onBoardAndEmpty(tiling, location):
 
 def attemptToAddL_Tile(tiling, L_tile_type, location, label):
     """
-        Given a tiling (a 2d np array of shorts, where a 0 represents a monomino and higher integers represent L tiles, where all the squares in the same L tile have the same integer), attempts to add the given L_tile_type by placing its upper left square at the given location coord. Modifies tiling (by putting the integer label in all 3 tiles of the L_tile) and returns True if possible, and returns False if not possible. This function assumes location is within bounds of the grid.
+        Given a tiling (a 2d np array of shorts, where a 0 represents a monomino and higher integers represent L tiles, where all the squares in the same L tile have the same integer), attempts to add the given L_tile_type by placing its upper left square at the given location coord. Modifies tiling (by putting the integer label in all 3 tiles of the L_tile) and returns True if possible, and returns False if not possible. If not possible, leaves tiling unchanged. This function assumes location is within bounds of the grid.
     """
     if(tiling[tuple(location)]):
         #encountered non-zero element here; this means there's already another L_tile here
@@ -150,8 +150,44 @@ def testAttemptToAddL_Tile(tiling, L_tile_type, location, label):
     print(f"Result: {result}")
     print(tiling)
 
+def removeL_Tile(tiling, L_tile_type, location):
+    """
+        Removes L_tile. NOTE: only use this on already placed valid L tiles.
+    """
+    offsets = L_TILE_OFFSETS[L_tile_type]
+    first_coord = np.add(location, offsets[0])
+    second_coord = np.add(location, offsets[1])
+    tiling[tuple(location)] = 0
+    tiling[tuple(first_coord)]  = 0
+    tiling[tuple(second_coord)] = 0 
+
+def testRemoveL_Tile(tiling, L_tile_type, location):
+    removeL_Tile(tiling, L_tile_type, location)
+    print(tiling)
+
 def getEmptyTiling():
     return(np.zeros([HEIGHT, WIDTH], dtype=np.short))
+
+def attemptToAddCombo(tiling, L_tile_type, combo, start_label):
+    """
+        Given an L_tile combo (a tuple of coords from the potential_L_tile_locations) and a start_label which is the label of the lowest number tile, modifies tiling and returns whether it succeeded or not. If fails, leaves tiling in a consistent state.
+    """
+    didFail = False
+    for (index, coord) in enumerate(combo):
+        addSucceeded = attemptToAddL_Tile(tiling, L_tile_type, coord, start_label + index)
+        if(not(addSucceeded)):
+            #undo everything
+            undoLimit = index
+            didFail = True
+            break
+    if(didFail):
+        for j in range(0, undoLimit):
+            removeL_Tile(tiling, L_tile_type, combo[j])
+        return(False)
+    #did not fail
+    return(True)
+
+
 
 if(__name__ == "__main__"):
     setupGlobals(givenWidth = 4, givenHeight = 2)

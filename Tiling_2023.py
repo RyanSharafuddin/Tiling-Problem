@@ -42,7 +42,11 @@ def addAllTilings(tilings_set, num_L_tiles):
     for L_tile_combo in L_tile_combos:
         #TODO: 1st approach: choose locations for each group of L tiles and see if it works
         #TODO: 2nd approach: choose locations for each group intelligently so as not to overlap
-        potential_L_tile_locations = getPotentialL_tileLocations(L_tile_combo)
+        # potential_L_tile_locations = getPotentialL_tileLocations(L_tile_combo)
+        filtered_L_tile_locations = getFilteredL_TileLocations(L_tile_combo)
+        print("Filtered Locations:")
+        printPotentialL_TileLocations(filtered_L_tile_locations)
+        print()
         
 def findRightMost(l, item):
     """
@@ -111,7 +115,7 @@ def printPotentialL_TileLocations(potential_L_tile_locations):
                 print(f"),\n", end="")
                 # print(f"    {combo}")
             print(f"    ]\n")
-    print("]\n")
+    print("]")
 
 def onBoardAndEmpty(tiling, location):
     """
@@ -193,12 +197,23 @@ def getFilteredL_TileLocations(L_tile_combo):
     """
     # tup[0] is l_tile_type, and tup[1] is single_type_list_of_combos, which is potential_L_tile_locations[l_tile_type], which is a list of tuples, where each tuple is a combo
     potential_L_tile_locations = getPotentialL_tileLocations(L_tile_combo)
-    filtered_L_tile_locations = list
-    (
-        map
-            (
-                lambda tup: list(filter( lambda combo_tuple: attemptToAddCombo(getEmptyTiling(), tup[0], combo_tuple, 1), tup[1])), enumerate(potential_L_tile_locations)
-            )
+
+    # filtered_L_tile_locations = []
+    # for(L_tile_type, combos_list) in enumerate(potential_L_tile_locations):
+    #     filtered_combo_list = list(filter(lambda combo: attemptToAddCombo(getEmptyTiling(), L_tile_type, combo, 1), combos_list))
+    #     filtered_L_tile_locations.append(filtered_combo_list)
+    # return(filtered_L_tile_locations)
+
+    filtered_L_tile_locations = list(
+        map(
+            lambda tup: list(
+                filter(
+                    lambda combo_tuple: attemptToAddCombo(getEmptyTiling(), tup[0], combo_tuple, 1),
+                    tup[1]
+                )
+            ), 
+            enumerate(potential_L_tile_locations)
+        )
     )
     return(filtered_L_tile_locations)
 

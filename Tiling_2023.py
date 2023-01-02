@@ -187,7 +187,20 @@ def attemptToAddCombo(tiling, L_tile_type, combo, start_label):
     #did not fail
     return(True)
 
-
+def getFilteredL_TileLocations(L_tile_combo):
+    """
+        Given an L_tile_combo that says which L_tiles will be in use, get the potential l tile combo locations, but filtered of the internally inconsistent combos
+    """
+    # tup[0] is l_tile_type, and tup[1] is single_type_list_of_combos, which is potential_L_tile_locations[l_tile_type], which is a list of tuples, where each tuple is a combo
+    potential_L_tile_locations = getPotentialL_tileLocations(L_tile_combo)
+    filtered_L_tile_locations = list
+    (
+        map
+            (
+                lambda tup: list(filter( lambda combo_tuple: attemptToAddCombo(getEmptyTiling(), tup[0], combo_tuple, 1), tup[1])), enumerate(potential_L_tile_locations)
+            )
+    )
+    return(filtered_L_tile_locations)
 
 if(__name__ == "__main__"):
     setupGlobals(givenWidth = 4, givenHeight = 2)

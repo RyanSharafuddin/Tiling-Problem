@@ -41,13 +41,7 @@ def addAllTilings(tilings, num_L_tiles):
     #L_tile_combos is all such combos for the given total number of L_tiles
     L_tile_combos = it.combinations_with_replacement(L_TILES, num_L_tiles) 
     for L_tile_combo in L_tile_combos:
-        #TODO: 1st approach: choose locations for each group of L tiles and see if it works
-        #TODO: 2nd approach: choose locations for each group intelligently so as not to overlap
-        # potential_L_tile_locations = getPotentialL_tileLocations(L_tile_combo)
         filtered_L_tile_locations = getFilteredL_TileLocations(L_tile_combo)
-        # print("Filtered Locations:")
-        # printPotentialL_TileLocations(filtered_L_tile_locations)
-        # print()
         loop_rec(0, getEmptyTiling(), filtered_L_tile_locations, 1, tilings)
 
 def loop_rec(n, tiling, filtered_L_tile_locations, start_label, tilings):
@@ -56,8 +50,6 @@ def loop_rec(n, tiling, filtered_L_tile_locations, start_label, tilings):
             #adding combo succeeded
             if(n == 3):
                 tilings.append(copy.deepcopy(tiling))
-                # print(f"Valid tiling found:")
-                # print(tiling)
             else:
                 loop_rec(n + 1, tiling, filtered_L_tile_locations, start_label + len(combo_type_n), tilings)
             removeCombo(tiling, n, combo_type_n)
@@ -97,18 +89,13 @@ def getPotentialL_tileLocations(L_tile_combo):
         potential_L_tile_locations[i][j] - a tuple of coords, corresponding to a combo of locations for L_tile type i. (can be empty tuple if that tile is not used - empty combo)
         potential_L_tile_locations[i][j][k] - a coord in combo j for tile i 
     """
-    # print(f"L_tile_combo: {L_tile_combo}")
     nums_of_each_L_tile = getNumsOfEachL_tile(L_tile_combo)
-    # print(f"nums_of_each_L_tile: {nums_of_each_L_tile}")
     potential_L_tile_locations = []
     for L_tile_type in L_TILES:
         potential_L_tile_locations.append( 
             #NOTE: can wrap entire line below in np.array to change list into np.array to speed up; makes debugging printing uglier, but may speed up code
             list(it.combinations(LOCATIONS, nums_of_each_L_tile[L_tile_type]) 
             ))
-    # print(f"potential_L_tile_locations:")
-    # printPotentialL_TileLocations(potential_L_tile_locations)
-    # print()
     return(potential_L_tile_locations)
 
 def printPotentialL_TileLocations(potential_L_tile_locations):
@@ -127,7 +114,6 @@ def printPotentialL_TileLocations(potential_L_tile_locations):
                 for coord in combo:
                     print(f"{coord},", end="")
                 print(f"),\n", end="")
-                # print(f"    {combo}")
             print(f"    ]\n")
     print("]")
 
@@ -218,17 +204,7 @@ def getFilteredL_TileLocations(L_tile_combo):
     """
     # tup[0] is l_tile_type, and tup[1] is single_type_list_of_combos, which is potential_L_tile_locations[l_tile_type], which is a list of tuples, where each tuple is a combo
     potential_L_tile_locations = getPotentialL_tileLocations(L_tile_combo)
-    filtered_L_tile_locations = list(
-        map(
-            lambda tup: list(
-                filter(
-                    lambda combo_tuple: attemptToAddCombo(getEmptyTiling(), tup[0], combo_tuple, 1),
-                    tup[1]
-                )
-            ), 
-            enumerate(potential_L_tile_locations)
-        )
-    )
+    filtered_L_tile_locations = list(map(lambda tup: list(filter(lambda combo_tuple: attemptToAddCombo(getEmptyTiling(), tup[0], combo_tuple, 1), tup[1])), enumerate(potential_L_tile_locations)))
     return(filtered_L_tile_locations)
 
 if(__name__ == "__main__"):

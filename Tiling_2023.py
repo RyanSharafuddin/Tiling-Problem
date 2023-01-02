@@ -4,6 +4,7 @@
 import numpy as np
 import itertools as it
 import bisect as b
+import copy
 
 def setupGlobals(givenWidth, givenHeight):
     global WIDTH
@@ -18,7 +19,7 @@ def setupGlobals(givenWidth, givenHeight):
     HEIGHT = givenHeight
     TOTAL = WIDTH * HEIGHT
     MAX_POSSIBLE_L_TILES = TOTAL // 3 # Note integer division here
-    L_TILES = np.array([0, 1, 2, 3]) #In order: TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, TOP_LEFT
+    L_TILES = np.array(range(4)) #In order: TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, TOP_LEFT
     #Locations is an ndarry of all the coordinates, where each coordinate is a 1d array in the form [y x], where [0 0] is top left
     LOCATIONS = []
     for h in range(HEIGHT):
@@ -35,7 +36,7 @@ def setupGlobals(givenWidth, givenHeight):
             ]
         )
 
-def addAllTilings(tilings_set, num_L_tiles):
+def addAllTilings(tilings, num_L_tiles):
     #A combo is a sorted list of which L_tiles present
     #L_tile_combos is all such combos for the given total number of L_tiles
     L_tile_combos = it.combinations_with_replacement(L_TILES, num_L_tiles) 
@@ -47,6 +48,19 @@ def addAllTilings(tilings_set, num_L_tiles):
         print("Filtered Locations:")
         printPotentialL_TileLocations(filtered_L_tile_locations)
         print()
+        loop_rec(0, getEmptyTiling(), filtered_L_tile_locations, 1, tilings)
+
+def loop_rec(n, tiling, filtered_L_tile_locations, start_label, tilings):
+    for combo_type_n in filtered_L_tile_locations[n]:
+        if(attemptToAddCombo(tiling, n, combo_type_n, start_label)):
+            #adding combo succeeded
+            if(n == 3):
+                tilings.append(copy.deepcopy(tiling))
+                print(f"Valid tiling found:")
+                print(tiling)
+            else:
+                loop_rec(n + 1, tiling, filtered_L_tile_locations, start_label + len(combo_type_n), tilings)
+            removeCombo(tiling, n, combo_type_n)
         
 def findRightMost(l, item):
     """
@@ -191,6 +205,13 @@ def attemptToAddCombo(tiling, L_tile_type, combo, start_label):
     #did not fail
     return(True)
 
+def removeCombo(tiling, L_tile_type, combo):
+    """
+        NOTE: only use this on fully added valid combos
+    """
+    for location in combo:
+        removeL_Tile(tiling, L_tile_type, location)
+
 def getFilteredL_TileLocations(L_tile_combo):
     """
         Given an L_tile_combo that says which L_tiles will be in use, get the potential l tile combo locations, but filtered of the internally inconsistent combos
@@ -218,9 +239,10 @@ def getFilteredL_TileLocations(L_tile_combo):
     return(filtered_L_tile_locations)
 
 if(__name__ == "__main__"):
-    setupGlobals(givenWidth = 4, givenHeight = 2)
-    tilings_set = set() #considering rotated/reflected tilings to be different
+    setupGlobals(givenWidth = 2, givenHeight = 2)
+    tilings= [] #considering rotated/reflected tilings to be different
 
     for num_L_tiles in range(0, MAX_POSSIBLE_L_TILES + 1):
-        addAllTilings(tilings_set, num_L_tiles)
+        addAllTilings(tilings, num_L_tiles)
+    print(f"The number of tilings is: {len(tilings)}")
 

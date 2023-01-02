@@ -7,13 +7,7 @@ import bisect as b
 import copy
 
 def setupGlobals(givenWidth, givenHeight):
-    global WIDTH
-    global HEIGHT
-    global TOTAL
-    global MAX_POSSIBLE_L_TILES
-    global L_TILES
-    global LOCATIONS
-    global L_TILE_OFFSETS
+    global WIDTH,  HEIGHT,  TOTAL,  MAX_POSSIBLE_L_TILES,  L_TILES,  LOCATIONS,  L_TILE_OFFSETS
 
     WIDTH = givenWidth
     HEIGHT = givenHeight
@@ -149,11 +143,6 @@ def attemptToAddL_Tile(tiling, L_tile_type, location, label):
         tiling[tuple(second_coord)] = label 
         return(True)
 
-def testAttemptToAddL_Tile(tiling, L_tile_type, location, label):
-    result = attemptToAddL_Tile(tiling, L_tile_type, location, label)
-    print(f"Result: {result}")
-    print(tiling)
-
 def removeL_Tile(tiling, L_tile_type, location):
     """
         Removes L_tile. NOTE: only use this on already placed valid L tiles.
@@ -164,10 +153,6 @@ def removeL_Tile(tiling, L_tile_type, location):
     tiling[tuple(location)] = 0
     tiling[tuple(first_coord)]  = 0
     tiling[tuple(second_coord)] = 0 
-
-def testRemoveL_Tile(tiling, L_tile_type, location):
-    removeL_Tile(tiling, L_tile_type, location)
-    print(tiling)
 
 def getEmptyTiling():
     return(np.zeros([HEIGHT, WIDTH], dtype=np.short))

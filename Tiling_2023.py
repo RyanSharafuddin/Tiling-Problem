@@ -103,14 +103,14 @@ def printPotentialL_TileLocations(potential_L_tile_locations):
         if(len(potential_L_tile_locations[L_tile_type]) == 1): #There's only the empty tuple; can print all on one line
             print(f"    {potential_L_tile_locations[L_tile_type]}")
         else:
-            print(f"    [", end="")
+            print(f"    [\n", end="")
             for combo in potential_L_tile_locations[L_tile_type]:
-                print(f"(", end="")
+                print(f"        (", end="")
                 for coord in combo:
                     print(f"{coord},", end="")
-                print(f"), ", end="")
+                print(f"),\n", end="")
                 # print(f"    {combo}")
-            print(f"]")
+            print(f"    ]\n")
     print("]\n")
 
 def onBoardAndEmpty(tiling, location):

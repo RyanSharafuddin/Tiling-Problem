@@ -253,8 +253,6 @@ def plotAllTilings(tilings):
     COLORS = np.array([[125, 125, 125], [217, 11, 11], [9, 17, 173], [173, 9, 159], [224, 130, 7], [48, 173, 10]], dtype=int)
     PLOT_CELLS_HEIGHT = math.ceil(len(tilings) ** .5) * (HEIGHT + 1)
     PLOT_CELLS_WIDTH = math.ceil(len(tilings) ** .5) * (WIDTH + 1)
-    # print(f"PLOT_CELLS_HEIGHT: {PLOT_CELLS_HEIGHT}")
-    # colors = np.random.rand(PLOT_CELLS_HEIGHT, PLOT_CELLS_HEIGHT, 3)
     colors = np.ones((PLOT_CELLS_HEIGHT, PLOT_CELLS_WIDTH, 3), dtype=int)
 
     tilings_in_column = len(colors) // (HEIGHT + 1)
@@ -265,13 +263,13 @@ def plotAllTilings(tilings):
         upper_left_y = (index // tilings_in_column) * (HEIGHT + 1)
         plotTiling([upper_left_y, upper_left_x], tiling, colors)
 
-    # print(f"colors:\n{colors}")
     PLT_SIZE = 10   #how big the display is
     fig = plt.figure()
     fig.set_figwidth(PLT_SIZE)
     fig.set_figheight(PLT_SIZE)
 
     ax = fig.gca()
+    #TODO: instead of using up a whole extra row/column for each tiling (the WIDTH and HEIGHT + 1), maybe use minor tick grid lines inside tilings, with low alpha in the grid, and major tick grid lines between tilings
     yticks = np.linspace(0, PLOT_CELLS_HEIGHT, PLOT_CELLS_HEIGHT + 1) + .5
     xticks = np.linspace(0, PLOT_CELLS_WIDTH, PLOT_CELLS_WIDTH + 1) + .5
     ax.set_xticks(xticks)
@@ -280,7 +278,6 @@ def plotAllTilings(tilings):
     ax.axes.xaxis.set_ticklabels([])
     ax.axes.yaxis.set_ticklabels([])
 
-    # print(c)
     plt.imshow(colors, interpolation='nearest')
     plt.tight_layout()
     plt.grid(linewidth = .3)

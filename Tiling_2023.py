@@ -259,6 +259,7 @@ def printOutput(tilings):
     IDEA: 
         Have loop_rec append a tuple to tilings, which includes the original tiling as well as a list of lists (say, l) [[], [], [], []], where each second-level list corresponds to one of the 4 types of L tiles. l[i] will be a list of coordinates of the upper left corners of L tile type i, sorted by being nearest top, then leftmost (upper left is first, then upper right, etc) (so, 1 combo from the filtered_L_tile_locations). These are guaranteed to be exactly the same for the same tiling. Then, make a function that 'rotates/reflects' this representation, since you know that a transformation will transform one type of L tile into another and where its new upper left corner will be. Then, can compare those for symmetries.
     STEPS:
+        0) Write a test case using known output that you know would fail using below method, and verify it fails.
         1) Modify loop_rec to attach the needed information, and modify printing to print it out with the tilings.
         2) Make a function that rotates this representation 90 degrees counterclockwise.
         3) Make a function that reflects this representation horizontally.

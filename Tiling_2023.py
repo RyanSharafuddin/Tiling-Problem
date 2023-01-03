@@ -251,7 +251,8 @@ def plotTiling(coord, tiling, colors):
 
 def plotAllTilings(tilings):
     global COLORS
-    COLORS = np.array([[125, 125, 125], [224, 130, 7], [48, 173, 10], [9, 17, 173], [173, 9, 159], [217, 11, 11]], dtype=int)
+
+    COLORS = np.array([[125, 125, 125], [224, 130, 7], [48, 173, 10], [9, 17, 173], [173, 9, 159], [217, 11, 11], [21, 176, 155], [28, 74, 33], [172, 136, 191], [69, 5, 23]], dtype=int)
 
     PLOT_CELLS_WIDTH = math.ceil(len(tilings) ** .5) * (WIDTH)   #NOTE
     PLOT_CELLS_HEIGHT = math.ceil(len(tilings) / math.ceil(len(tilings) ** .5)) * (HEIGHT) 

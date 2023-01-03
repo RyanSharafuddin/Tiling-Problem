@@ -251,8 +251,8 @@ def plotTiling(coord, tiling, colors):
 def plotAllTilings(tilings):
     global COLORS
     COLORS = np.array([[125, 125, 125], [48, 173, 10], [9, 17, 173], [173, 9, 159], [224, 130, 7], [217, 11, 11]], dtype=int)
-    PLOT_CELLS_HEIGHT = math.ceil(len(tilings) ** .5) * (HEIGHT + 1)
     PLOT_CELLS_WIDTH = math.ceil(len(tilings) ** .5) * (WIDTH + 1)
+    PLOT_CELLS_HEIGHT = math.ceil(len(tilings) / math.ceil(len(tilings) ** .5)) * (HEIGHT + 1)
     colors = np.ones((PLOT_CELLS_HEIGHT, PLOT_CELLS_WIDTH, 3), dtype=int)
 
     tilings_in_column = len(colors) // (HEIGHT + 1)
@@ -260,7 +260,7 @@ def plotAllTilings(tilings):
 
     for index, tiling in enumerate(tilings):
         upper_left_x = (index % tilings_in_row) * (WIDTH + 1)
-        upper_left_y = (index // tilings_in_column) * (HEIGHT + 1)
+        upper_left_y = (index // tilings_in_row) * (HEIGHT + 1)
         plotTiling([upper_left_y, upper_left_x], tiling, colors)
 
     PLT_SIZE = 10   #how big the display is
@@ -285,8 +285,8 @@ def plotAllTilings(tilings):
 
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ###########################
-    WIDTH = 3
-    HEIGHT = 3
+    WIDTH = 4
+    HEIGHT = 2
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
     PRINT_PROGRESS = False              # Recommended for large grids

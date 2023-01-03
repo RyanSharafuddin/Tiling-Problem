@@ -2,7 +2,7 @@
     According to https://www.numbersaplenty.com/2023, there are exactly 2023 ways to tile a 4x4 grid using only L tiles and monominos. It does not clarify if rotations or reflections count as different ways, or prove the statement. This Python program will attempt to verify it.
 """
 # Note: Profile by doing 'python -m cProfile -s tottime Tiling_2023.py'
-import numpy as np, itertools as it, bisect as b, copy, math
+import numpy as np, itertools as it, bisect as b, copy, math, matplotlib.pyplot as plt
 
 def setupCalculationGlobals(givenWidth, givenHeight):
     global WIDTH,  HEIGHT,  TOTAL,  MAX_POSSIBLE_L_TILES,  L_TILES,  LOCATIONS,  L_TILE_OFFSETS
@@ -241,15 +241,59 @@ def printOutput(tilings):
             for index, tiling in enumerate(tilings):
                 print(f"{index + 1}:\n{tiling}\n", file = f)
         print(f"For {WIDTH} x {HEIGHT} rectangles:", file = f)
-        print(f"The number of tilings is: {len(tilings)}", file = f) 
+        print(f"The number of tilings is: {len(tilings)}", file = f)
+
+def plotTiling(coord, tiling, colors):
+    for y in range(coord[0], coord[0] + HEIGHT):
+        for x in range(coord[1], coord[1] + WIDTH):
+            colors[y, x] = COLORS[ tiling[(y-coord[0], x-coord[1])] ]
+
+def plotAllTilings(tilings):
+    global COLORS
+    COLORS = np.array([[125, 125, 125], [217, 11, 11], [9, 17, 173], [173, 9, 159], [224, 130, 7], [48, 173, 10]], dtype=int)
+    PLOT_CELLS_HEIGHT = math.ceil(len(tilings) ** .5) * (HEIGHT + 1)
+    PLOT_CELLS_WIDTH = math.ceil(len(tilings) ** .5) * (WIDTH + 1)
+    # print(f"PLOT_CELLS_HEIGHT: {PLOT_CELLS_HEIGHT}")
+    # colors = np.random.rand(PLOT_CELLS_HEIGHT, PLOT_CELLS_HEIGHT, 3)
+    colors = np.ones((PLOT_CELLS_HEIGHT, PLOT_CELLS_WIDTH, 3), dtype=int)
+
+    tilings_in_column = len(colors) // (HEIGHT + 1)
+    tilings_in_row = len(colors[0]) // (WIDTH + 1)
+
+    for index, tiling in enumerate(tilings):
+        upper_left_x = (index % tilings_in_row) * (WIDTH + 1)
+        upper_left_y = (index // tilings_in_column) * (HEIGHT + 1)
+        plotTiling([upper_left_y, upper_left_x], tiling, colors)
+
+    # print(f"colors:\n{colors}")
+    PLT_SIZE = 10   #how big the display is
+    fig = plt.figure()
+    fig.set_figwidth(PLT_SIZE)
+    fig.set_figheight(PLT_SIZE)
+
+    ax = fig.gca()
+    yticks = np.linspace(0, PLOT_CELLS_HEIGHT, PLOT_CELLS_HEIGHT + 1) + .5
+    xticks = np.linspace(0, PLOT_CELLS_WIDTH, PLOT_CELLS_WIDTH + 1) + .5
+    ax.set_xticks(xticks)
+    ax.set_yticks(yticks)
+    ax.minorticks_off()
+    ax.axes.xaxis.set_ticklabels([])
+    ax.axes.yaxis.set_ticklabels([])
+
+    # print(c)
+    plt.imshow(colors, interpolation='nearest')
+    plt.tight_layout()
+    plt.grid(linewidth = .3)
+    plt.savefig(f"tilings_{WIDTH}x{HEIGHT}.png", format = "png", dpi=800) 
 
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ###########################
-    WIDTH = 5
-    HEIGHT = 4
+    WIDTH = 3
+    HEIGHT = 3
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
     PRINT_PROGRESS = False              # Recommended for large grids
+    SHOW_IMAGE = True                   # Not recommended for larger than 4x4
     ###########################################################################
     setupCalculationGlobals(givenWidth = WIDTH, givenHeight = HEIGHT)
     setupOutputGlobals(printIndividualTilings = PRINT_INDIVIDUAL_TILINGS, printFilterTest = PRINT_FILTER_TEST, printProgress = PRINT_PROGRESS)
@@ -263,4 +307,8 @@ if(__name__ == "__main__"):
     if(filter_file):
         filter_file.close()
     print(f"Completed calculations for {WIDTH} x {HEIGHT} grid.")
+    if(SHOW_IMAGE):
+        print("Creating image . . .")
+        plotAllTilings(tilings)
+        print("Finished creating image.")
 

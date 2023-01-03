@@ -2,7 +2,7 @@
     According to https://www.numbersaplenty.com/2023, there are exactly 2023 ways to tile a 4x4 grid using only L tiles and monominos. It does not clarify if rotations or reflections count as different ways, or prove the statement. This Python program will attempt to verify it.
 """
 # Note: Profile by doing 'python -m cProfile -s tottime Tiling_2023.py'
-import numpy as np, itertools as it, bisect as b, copy
+import numpy as np, itertools as it, bisect as b, copy, math, functools
 
 def setupCalculationGlobals(givenWidth, givenHeight):
     global WIDTH,  HEIGHT,  TOTAL,  MAX_POSSIBLE_L_TILES,  L_TILES,  LOCATIONS,  L_TILE_OFFSETS
@@ -28,10 +28,11 @@ def setupCalculationGlobals(givenWidth, givenHeight):
             ]
         )
 
-def setupOutputGlobals(printIndividualTilings, printFilterTest):
-    global PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST
+def setupOutputGlobals(printIndividualTilings, printFilterTest, printProgress):
+    global PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS
     PRINT_INDIVIDUAL_TILINGS = printIndividualTilings
     PRINT_FILTER_TEST = printFilterTest
+    PRINT_PROGRESS = printProgress
 
 def addAllTilingsForNumLTiles(tilings, num_L_tiles, filter_file):
     """
@@ -40,8 +41,22 @@ def addAllTilingsForNumLTiles(tilings, num_L_tiles, filter_file):
     #A combo is a sorted list of which L_tiles present
     #L_tile_combos is all such combos for the given total number of L_tiles
     L_tile_combos = it.combinations_with_replacement(L_TILES, num_L_tiles) 
+    num_combos = int(math.factorial(len(L_TILES) + num_L_tiles - 1) / (math.factorial(num_L_tiles) * math.factorial(len(L_TILES) - 1)))
+    index = 0
     for L_tile_combo in L_tile_combos:
+        if(PRINT_PROGRESS):
+            index += 1
+            print(f"num_L_tiles: {str(num_L_tiles).rjust(3, ' ')} out of: {str(MAX_POSSIBLE_L_TILES).rjust(3, ' ')}")
+            print(f"      combo: {str(index).rjust(3, ' ')} out of: {str(num_combos).rjust(3, ' ')}")
         filtered_L_tile_locations = getFilteredL_TileLocations(L_tile_combo, filter_file)
+
+        # if(PRINT_PROGRESS):
+        #     # Use the below in loop_rec to print progress
+        #     global max_combos_to_try 
+        #     global current_combo
+        #     max_combos_to_try = functools.reduce(lambda x, y: x * len(y), filtered_L_tile_locations, 1)
+        #     current_combo = 0
+
         loop_rec(0, getEmptyTiling(), filtered_L_tile_locations, 1, tilings)
         if(filter_file):
             print("Filtered Locations:", file = filter_file)
@@ -236,13 +251,14 @@ def printOutput(tilings):
 
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ###########################
-    WIDTH = 4
-    HEIGHT = 4
+    WIDTH = 5
+    HEIGHT = 5
     PRINT_INDIVIDUAL_TILINGS = True
-    PRINT_FILTER_TEST = True                # Not recommended for large grids
+    PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
+    PRINT_PROGRESS = True              # Recommended for large grids
     ###########################################################################
     setupCalculationGlobals(givenWidth = WIDTH, givenHeight = HEIGHT)
-    setupOutputGlobals(printIndividualTilings = PRINT_INDIVIDUAL_TILINGS, printFilterTest = PRINT_FILTER_TEST)
+    setupOutputGlobals(printIndividualTilings = PRINT_INDIVIDUAL_TILINGS, printFilterTest = PRINT_FILTER_TEST, printProgress = PRINT_PROGRESS)
     if(PRINT_FILTER_TEST):
         filter_filename = f"filter_test_{WIDTH}x{HEIGHT}.txt"
         filter_file = open(filter_filename, 'w')

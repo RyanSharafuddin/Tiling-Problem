@@ -254,18 +254,18 @@ def plotAllTilings(tilings):
     COLORS = np.array([[125, 125, 125], [224, 130, 7], [48, 173, 10], [9, 17, 173], [173, 9, 159], [217, 11, 11]], dtype=int)
 
     PLOT_CELLS_WIDTH = math.ceil(len(tilings) ** .5) * (WIDTH)   #NOTE
-    PLOT_CELLS_HEIGHT = math.ceil(len(tilings) / math.ceil(len(tilings) ** .5)) * (HEIGHT) #NOTE: remove + 1 here to not put an extra row/column between tilings
+    PLOT_CELLS_HEIGHT = math.ceil(len(tilings) / math.ceil(len(tilings) ** .5)) * (HEIGHT) 
 
     # print(f"PLOT_CELLS_HEIGHT: {PLOT_CELLS_HEIGHT}, PLOT_CELLS_WIDTH:  {PLOT_CELLS_WIDTH}")
     colors = np.ones((PLOT_CELLS_HEIGHT, PLOT_CELLS_WIDTH, 3), dtype=int) * 255
 
-    tilings_in_column = len(colors) // (HEIGHT) #NOTE: remove + 1 here to not put an extra row/column between tilings
+    tilings_in_column = len(colors) // (HEIGHT) 
     tilings_in_row = len(colors[0]) // (WIDTH)
 
     # print(f"tilings_in_column: {tilings_in_column}, tilings_in_row:  {tilings_in_row}")
 
     for index, tiling in enumerate(tilings):
-        upper_left_x = (index % tilings_in_row) * (WIDTH) #NOTE: remove + 1 here to not put an extra row/column between tilings
+        upper_left_x = (index % tilings_in_row) * (WIDTH) 
         upper_left_y = (index // tilings_in_row) * (HEIGHT)
         # print(f"index: {index}, upper_left_x: {upper_left_x}, upper_left_y: {upper_left_y}")
         plotTiling([upper_left_y, upper_left_x], tiling, colors)

@@ -4,11 +4,14 @@
 # Note: Profile by doing 'python -m cProfile -s tottime Tiling_2023.py'
 import numpy as np, itertools as it, bisect as b, copy, math
 
-def setupCalculationGlobals(givenWidth, givenHeight):
-    global WIDTH,  HEIGHT,  TOTAL,  MAX_POSSIBLE_L_TILES,  L_TILES,  LOCATIONS,  L_TILE_OFFSETS
+def setupCalculationGlobals(givenWidth, givenHeight, givenOffsetsString):
+    global WIDTH,  HEIGHT,  TOTAL,  MAX_POSSIBLE_L_TILES,  L_TILES,  LOCATIONS,  L_TILE_OFFSETS, L_TILE_OFFSETS_STRING
 
+    L_TILE_OFFSETS_STRING = givenOffsetsString
+    L_TILE_OFFSETS = eval(L_TILE_OFFSETS_STRING)
     WIDTH = givenWidth
     HEIGHT = givenHeight
+
     TOTAL = WIDTH * HEIGHT
     #Locations is an ndarry of all the coordinates, where each coordinate is a 1d array in the form [y x], where [0 0] is top left
     LOCATIONS = []
@@ -16,24 +19,16 @@ def setupCalculationGlobals(givenWidth, givenHeight):
         for w in range(WIDTH):
             LOCATIONS.append(np.array([h, w]))
     LOCATIONS = np.array(LOCATIONS)
-    #offsets[i] are used calculate the other 2 tiles of an L tile of type i given the coord of its top left tile 
-    L_TILE_OFFSETS = np.array(
-            [
-                [[0,1], [1,1]],   #TOP_RIGHT
-                [[1, -1], [1,0]], #BOTTOM_RIGHT
-                [[1,0], [1,1]],   #BOTTOM_LEFT
-                [[1,0], [0, 1]]   #TOP_LEFT
-            ]
-        )
     # Note integer division below. Finds minimal size tile (minimum number of offsets + 1) and uses it to calculate maximum possible number of tiles
     MAX_POSSIBLE_L_TILES = TOTAL // (min(map(lambda l: len(l), L_TILE_OFFSETS)) + 1)
     L_TILES = np.array(range(len(L_TILE_OFFSETS))) 
 
-def setupOutputGlobals(printIndividualTilings, printFilterTest, printProgress):
-    global PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS
+def setupOutputGlobals(printIndividualTilings, printFilterTest, printProgress, shapeSuffix):
+    global PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHAPE_SUFFIX
     PRINT_INDIVIDUAL_TILINGS = printIndividualTilings
     PRINT_FILTER_TEST = printFilterTest
     PRINT_PROGRESS = printProgress
+    SHAPE_SUFFIX = shapeSuffix
 
 def addAllTilingsForNumLTiles(tilings, num_L_tiles, filter_file):
     """
@@ -158,28 +153,26 @@ def attemptToAddL_Tile(tiling, L_tile_type, location, label):
     else:
         #There is not another L_tile at the top left coord. Checking offsets
         offsets = L_TILE_OFFSETS[L_tile_type]
-        first_coord = np.add(location, offsets[0])
-        second_coord = np.add(location, offsets[1])
-        if(not(onBoardAndEmpty(tiling, first_coord))):
-            return(False)
-        if(not(onBoardAndEmpty(tiling, second_coord))):
-            return(False)
-        #both other coords are on board and empty; can place tile
+        #The 2 below comes from 2 dimensional grid; can be made n-dimensional relatively easily
+        coords = np.empty((len(L_TILE_OFFSETS[L_tile_type]), 2), dtype=np.short)
+        for index, offset in enumerate(offsets):
+            coords[index] = np.add(location, offset)
+            if(not(onBoardAndEmpty(tiling, coords[index]))):
+                return(False)
+        #Once verified all coords are on board and empty; can place tile
         tiling[tuple(location)] = label
-        tiling[tuple(first_coord)]  = label
-        tiling[tuple(second_coord)] = label 
+        for coord in coords:
+            tiling[tuple(coord)]  = label
         return(True)
 
 def removeL_Tile(tiling, L_tile_type, location):
     """
         Removes L_tile. NOTE: only use this on already placed valid L tiles.
     """
-    offsets = L_TILE_OFFSETS[L_tile_type]
-    first_coord = np.add(location, offsets[0])
-    second_coord = np.add(location, offsets[1])
     tiling[tuple(location)] = 0
-    tiling[tuple(first_coord)]  = 0
-    tiling[tuple(second_coord)] = 0 
+    offsets = L_TILE_OFFSETS[L_tile_type]
+    for offset in offsets:
+        tiling[tuple(np.add(location, offset))]  = 0
 
 def getEmptyTiling():
     return(np.zeros([HEIGHT, WIDTH], dtype=np.short))
@@ -235,26 +228,37 @@ def printOutput(tilings):
         If PRINT_INDIVIDUAL_TILINGS is True, will print all tilings as well as how many there are, otherwise only prints number of tilings.
         Prints output to a file called tilings_{WIDTH}x{HEIGHT}.txt
     """
-    tilings_filename = f"tilings_{WIDTH}x{HEIGHT}.txt"
+    tilings_filename = f"tilings_{WIDTH}x{HEIGHT}_{SHAPE_SUFFIX}.txt"
     with open(tilings_filename, 'w') as f:
         if(PRINT_INDIVIDUAL_TILINGS): 
             for index, tiling in enumerate(tilings):
                 print(f"{index + 1}:\n{tiling}\n", file = f)
         print(f"For {WIDTH} x {HEIGHT} rectangles:", file = f)
+        print(f"With tile offsets:\n{L_TILE_OFFSETS_STRING}", file = f)
         print(f"The number of tilings is: {len(tilings)}", file = f) 
 
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ###########################
-    WIDTH = 5
-    HEIGHT = 4
+    WIDTH = 3
+    HEIGHT = 3
     PRINT_INDIVIDUAL_TILINGS = True
-    PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
+    PRINT_FILTER_TEST = True          # Not recommended for large grids (>= 5x5)
     PRINT_PROGRESS = False              # Recommended for large grids
+    #offsets[i] are used calculate the other 2 tiles of a multi-tile of type i given the coord of its top left tile
+    # NOTE: The below string is important, as it's eval'd 
+    L_TILE_OFFSETS_STRING ="""np.array(
+            [
+                [[0, 1], [1,1], [1, 0]], #2x2 square shaped tile
+                [[0,1]],                 #horizontal domino
+                [[1,0]]                  #vertical domino
+            ], dtype=object
+        )"""
+    SHAPE_SUFFIX = "4square_domino" #Choose a suffix to describe the tileset
     ###########################################################################
-    setupCalculationGlobals(givenWidth = WIDTH, givenHeight = HEIGHT)
-    setupOutputGlobals(printIndividualTilings = PRINT_INDIVIDUAL_TILINGS, printFilterTest = PRINT_FILTER_TEST, printProgress = PRINT_PROGRESS)
+    setupCalculationGlobals(givenWidth = WIDTH, givenHeight = HEIGHT, givenOffsetsString = L_TILE_OFFSETS_STRING)
+    setupOutputGlobals(printIndividualTilings = PRINT_INDIVIDUAL_TILINGS, printFilterTest = PRINT_FILTER_TEST, printProgress = PRINT_PROGRESS, shapeSuffix = SHAPE_SUFFIX)
     if(PRINT_FILTER_TEST):
-        filter_filename = f"filter_test_{WIDTH}x{HEIGHT}.txt"
+        filter_filename = f"filter_test_{WIDTH}x{HEIGHT}_{SHAPE_SUFFIX}.txt"
         filter_file = open(filter_filename, 'w')
     else:
         filter_file = None

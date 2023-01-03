@@ -256,13 +256,13 @@ def plotAllTilings(tilings):
     PLOT_CELLS_WIDTH = math.ceil(len(tilings) ** .5) * (WIDTH)   #NOTE
     PLOT_CELLS_HEIGHT = math.ceil(len(tilings) / math.ceil(len(tilings) ** .5)) * (HEIGHT) #NOTE: remove + 1 here to not put an extra row/column between tilings
 
-    print(f"PLOT_CELLS_HEIGHT: {PLOT_CELLS_HEIGHT}, PLOT_CELLS_WIDTH:  {PLOT_CELLS_WIDTH}")
-    colors = np.ones((PLOT_CELLS_HEIGHT, PLOT_CELLS_WIDTH, 3), dtype=int)
+    # print(f"PLOT_CELLS_HEIGHT: {PLOT_CELLS_HEIGHT}, PLOT_CELLS_WIDTH:  {PLOT_CELLS_WIDTH}")
+    colors = np.ones((PLOT_CELLS_HEIGHT, PLOT_CELLS_WIDTH, 3), dtype=int) * 255
 
     tilings_in_column = len(colors) // (HEIGHT) #NOTE: remove + 1 here to not put an extra row/column between tilings
     tilings_in_row = len(colors[0]) // (WIDTH)
 
-    print(f"tilings_in_column: {tilings_in_column}, tilings_in_row:  {tilings_in_row}")
+    # print(f"tilings_in_column: {tilings_in_column}, tilings_in_row:  {tilings_in_row}")
 
     for index, tiling in enumerate(tilings):
         upper_left_x = (index % tilings_in_row) * (WIDTH) #NOTE: remove + 1 here to not put an extra row/column between tilings
@@ -279,23 +279,27 @@ def plotAllTilings(tilings):
     #TODO: instead of using up a whole extra row/column for each tiling (the WIDTH and HEIGHT + 1), maybe use minor tick grid lines inside tilings, with low alpha in the grid, and major tick grid lines between tilings
     yticks = np.linspace(0, PLOT_CELLS_HEIGHT, tilings_in_column + 1) - .5
     xticks = np.linspace(0, PLOT_CELLS_WIDTH, tilings_in_row + 1) - .5
-    print(f"yticks: {yticks}")
+    # print(f"yticks: {yticks}")
     ax.set_xticks(xticks)
     ax.set_yticks(yticks)
-    ax.minorticks_off()
+    # ax.minorticks_off()
+    ax.xaxis.set_minor_locator(AutoMinorLocator(WIDTH))
+    ax.yaxis.set_minor_locator(AutoMinorLocator(HEIGHT))
+    major_linewidth = (4 if (len(tilings) <= 500) else 1)
+    ax.grid(which='minor', color=(0,0,0,.2), linewidth=major_linewidth / 4)
+    ax.grid(which='major', color=(0,0,0,1), linewidth= major_linewidth) #Make the grid lines thinner if there are fewer tilings
     ax.axes.xaxis.set_ticklabels([])
     ax.axes.yaxis.set_ticklabels([])
 
     plt.imshow(colors, interpolation='nearest')
     plt.tight_layout()
-    plt.grid(linewidth = .3)
+    # plt.title(f"{len(tilings)} Tilings of a {WIDTH} x {HEIGHT} Grid" ) #cut off
     plt.savefig(f"tilings_{WIDTH}x{HEIGHT}.png", format = "png", dpi=800)
-    plt.show() 
 
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ###########################
-    WIDTH = 3
-    HEIGHT = 3
+    WIDTH = 4
+    HEIGHT = 4
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
     PRINT_PROGRESS = False              # Recommended for large grids
@@ -313,6 +317,7 @@ if(__name__ == "__main__"):
     if(filter_file):
         filter_file.close()
     print(f"Completed calculations for {WIDTH} x {HEIGHT} grid.")
+    print(f"There are: {len(tilings)} tilings.")
     if(SHOW_IMAGE):
         print("Creating image . . .")
         plotAllTilings(tilings)

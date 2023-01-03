@@ -3,6 +3,7 @@
 """
 # Note: Profile by doing 'python -m cProfile -s tottime Tiling_2023.py'
 import numpy as np, itertools as it, bisect as b, copy, math, matplotlib.pyplot as plt
+from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
 
 def setupCalculationGlobals(givenWidth, givenHeight):
     global WIDTH,  HEIGHT,  TOTAL,  MAX_POSSIBLE_L_TILES,  L_TILES,  LOCATIONS,  L_TILE_OFFSETS
@@ -250,17 +251,23 @@ def plotTiling(coord, tiling, colors):
 
 def plotAllTilings(tilings):
     global COLORS
-    COLORS = np.array([[125, 125, 125], [48, 173, 10], [9, 17, 173], [173, 9, 159], [224, 130, 7], [217, 11, 11]], dtype=int)
-    PLOT_CELLS_WIDTH = math.ceil(len(tilings) ** .5) * (WIDTH + 1)
-    PLOT_CELLS_HEIGHT = math.ceil(len(tilings) / math.ceil(len(tilings) ** .5)) * (HEIGHT + 1)
+    COLORS = np.array([[125, 125, 125], [224, 130, 7], [48, 173, 10], [9, 17, 173], [173, 9, 159], [217, 11, 11]], dtype=int)
+
+    PLOT_CELLS_WIDTH = math.ceil(len(tilings) ** .5) * (WIDTH)   #NOTE
+    PLOT_CELLS_HEIGHT = math.ceil(len(tilings) / math.ceil(len(tilings) ** .5)) * (HEIGHT) #NOTE: remove + 1 here to not put an extra row/column between tilings
+
+    print(f"PLOT_CELLS_HEIGHT: {PLOT_CELLS_HEIGHT}, PLOT_CELLS_WIDTH:  {PLOT_CELLS_WIDTH}")
     colors = np.ones((PLOT_CELLS_HEIGHT, PLOT_CELLS_WIDTH, 3), dtype=int)
 
-    tilings_in_column = len(colors) // (HEIGHT + 1)
-    tilings_in_row = len(colors[0]) // (WIDTH + 1)
+    tilings_in_column = len(colors) // (HEIGHT) #NOTE: remove + 1 here to not put an extra row/column between tilings
+    tilings_in_row = len(colors[0]) // (WIDTH)
+
+    print(f"tilings_in_column: {tilings_in_column}, tilings_in_row:  {tilings_in_row}")
 
     for index, tiling in enumerate(tilings):
-        upper_left_x = (index % tilings_in_row) * (WIDTH + 1)
-        upper_left_y = (index // tilings_in_row) * (HEIGHT + 1)
+        upper_left_x = (index % tilings_in_row) * (WIDTH) #NOTE: remove + 1 here to not put an extra row/column between tilings
+        upper_left_y = (index // tilings_in_row) * (HEIGHT)
+        # print(f"index: {index}, upper_left_x: {upper_left_x}, upper_left_y: {upper_left_y}")
         plotTiling([upper_left_y, upper_left_x], tiling, colors)
 
     PLT_SIZE = 10   #how big the display is
@@ -270,8 +277,9 @@ def plotAllTilings(tilings):
 
     ax = fig.gca()
     #TODO: instead of using up a whole extra row/column for each tiling (the WIDTH and HEIGHT + 1), maybe use minor tick grid lines inside tilings, with low alpha in the grid, and major tick grid lines between tilings
-    yticks = np.linspace(0, PLOT_CELLS_HEIGHT, PLOT_CELLS_HEIGHT + 1) + .5
-    xticks = np.linspace(0, PLOT_CELLS_WIDTH, PLOT_CELLS_WIDTH + 1) + .5
+    yticks = np.linspace(0, PLOT_CELLS_HEIGHT, tilings_in_column + 1) - .5
+    xticks = np.linspace(0, PLOT_CELLS_WIDTH, tilings_in_row + 1) - .5
+    print(f"yticks: {yticks}")
     ax.set_xticks(xticks)
     ax.set_yticks(yticks)
     ax.minorticks_off()
@@ -281,12 +289,13 @@ def plotAllTilings(tilings):
     plt.imshow(colors, interpolation='nearest')
     plt.tight_layout()
     plt.grid(linewidth = .3)
-    plt.savefig(f"tilings_{WIDTH}x{HEIGHT}.png", format = "png", dpi=800) 
+    plt.savefig(f"tilings_{WIDTH}x{HEIGHT}.png", format = "png", dpi=800)
+    plt.show() 
 
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ###########################
-    WIDTH = 4
-    HEIGHT = 2
+    WIDTH = 3
+    HEIGHT = 3
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
     PRINT_PROGRESS = False              # Recommended for large grids

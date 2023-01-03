@@ -241,11 +241,81 @@ def printOutput(tilings):
             for index, tiling in enumerate(tilings):
                 print(f"{index + 1}:\n{tiling}\n", file = f)
         print(f"For {WIDTH} x {HEIGHT} rectangles:", file = f)
-        print(f"The number of tilings is: {len(tilings)}", file = f) 
+        print(f"The number of tilings is: {len(tilings)}", file = f)
 
+
+    # WARN: 
+    #     The below code for symmetries does not actually work. Consider this: 
+    #     33:
+    #    [[2 2 0]
+    #     [2 0 1]
+    #     [0 1 1]]
+    #     Above tiling taken from 3x3. That is the same as:
+    #    [[1 1 0]
+    #     [1 0 2]
+    #     [0 2 2]]   
+    #     rotated 180 degrees. But current code will not catch b/c 2 != 1.    
+
+
+# def getTilingsFilteredForSymmetry(tilings):
+#     symmetries_set = set()
+#     for tiling in tilings:
+#         duplicate = False
+#         symmetries_set_this_tiling = getSymmetries(tiling)
+#         for symmetry in symmetries_set_this_tiling:
+#             if(symmetry in symmetries_set):
+#                 duplicate = True
+#                 break
+#         if(not(duplicate)):
+#             symmetries_set.add(tiling)
+#     return(symmetries_set)
+
+# def getSymmetries(tiling):
+#     symmetriesSet = set()
+#     if(HEIGHT == WIDTH):
+#         #square, 8 symmetries
+#         rot0 = tiling
+#         rot90 = np.rot90(tiling, 1)
+#         rot180 = np.rot90(tiling, 2)
+#         rot270 = np.rot90(tiling, 3)
+
+#         rot0_reflect_horizontal = np.flip(rot0, 0)
+#         rot90_reflect_horizontal = np.flip(rot90, 0)
+#         rot180_reflect_horizontal = np.flip(rot180, 0)
+#         rot270_reflect_horizontal = np.flip(rot270, 0)
+        
+#         symmetries_list = [rot0, rot90, rot180, rot270, rot0_reflect_horizontal, rot90_reflect_horizontal, rot180_reflect_horizontal, rot270_reflect_horizontal]
+
+#     else:
+#         #rectangle, 4 symmetries
+#         rot0 = tiling
+#         rot180 = np.rot90(tiling, 2)
+
+#         reflect_horizontal = np.flip(rot0, 0)
+#         reflect_vertical = np.flip(rot0, 1)
+        
+#         symmetries_list = [rot0, rot180, reflect_horizontal, reflect_vertical]
+
+#     print("Printing symmetries in symmetries list: ")
+#     for symmetry in symmetries_list:
+#         print(symmetry)
+    
+#     symmetries_tuple_list = map(tilingToTup, symmetries_list)
+#     for symmetry_tuple in symmetries_tuple_list:
+#         symmetriesSet.add(symmetry_tuple)
+
+#     print("Printing symmetries in symmetries set: ")
+#     for symmetry in symmetriesSet:
+#         print(np.array(symmetry))
+
+#     return(symmetriesSet)
+
+# def tilingToTup(tiling):
+#     return(tuple(map(tuple, tiling)))
+    
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ###########################
-    WIDTH = 5
+    WIDTH = 4
     HEIGHT = 4
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)

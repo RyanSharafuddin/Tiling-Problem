@@ -2,7 +2,7 @@
     According to https://www.numbersaplenty.com/2023, there are exactly 2023 ways to tile a 4x4 grid using only L tiles and monominos. It does not clarify if rotations or reflections count as different ways, or prove the statement. This Python program will attempt to verify it.
 """
 # Note: Profile by doing 'python -m cProfile -s tottime Tiling_2023.py'
-import numpy as np, itertools as it, bisect as b, copy, math, functools
+import numpy as np, itertools as it, bisect as b, copy, math
 
 def setupCalculationGlobals(givenWidth, givenHeight):
     global WIDTH,  HEIGHT,  TOTAL,  MAX_POSSIBLE_L_TILES,  L_TILES,  LOCATIONS,  L_TILE_OFFSETS
@@ -10,8 +10,6 @@ def setupCalculationGlobals(givenWidth, givenHeight):
     WIDTH = givenWidth
     HEIGHT = givenHeight
     TOTAL = WIDTH * HEIGHT
-    MAX_POSSIBLE_L_TILES = TOTAL // 3 # Note integer division here
-    L_TILES = np.array(range(4)) #In order: TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, TOP_LEFT
     #Locations is an ndarry of all the coordinates, where each coordinate is a 1d array in the form [y x], where [0 0] is top left
     LOCATIONS = []
     for h in range(HEIGHT):
@@ -21,12 +19,15 @@ def setupCalculationGlobals(givenWidth, givenHeight):
     #offsets[i] are used calculate the other 2 tiles of an L tile of type i given the coord of its top left tile 
     L_TILE_OFFSETS = np.array(
             [
-                [[0,1], [1,1]],
-                [[1, -1], [1,0]], 
-                [[1,0], [1,1]], 
-                [[1,0], [0, 1]]
+                [[0,1], [1,1]],   #TOP_RIGHT
+                [[1, -1], [1,0]], #BOTTOM_RIGHT
+                [[1,0], [1,1]],   #BOTTOM_LEFT
+                [[1,0], [0, 1]]   #TOP_LEFT
             ]
         )
+    # Note integer division below. Finds minimal size tile (minimum number of offsets + 1) and uses it to calculate maximum possible number of tiles
+    MAX_POSSIBLE_L_TILES = TOTAL // (min(map(lambda l: len(l), L_TILE_OFFSETS)) + 1)
+    L_TILES = np.array(range(len(L_TILE_OFFSETS))) 
 
 def setupOutputGlobals(printIndividualTilings, printFilterTest, printProgress):
     global PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS
@@ -36,7 +37,7 @@ def setupOutputGlobals(printIndividualTilings, printFilterTest, printProgress):
 
 def addAllTilingsForNumLTiles(tilings, num_L_tiles, filter_file):
     """
-        Given tilings (a list of each possible tiling) and a number of L_tiles from 0 up to MAX_POSSIBLE_L_TILES, adds all possible tilings (considering rotations and reflections to be different) to tilings
+        Given tilings (a list of each possible tiling) and a number of L_tiles from 0 up to MAX_POSSIBLE_L_TILES, adds all possible tilings (considering rotations and reflections to be different) to tilings. Writes filter test output to filter file if it isn't None.
     """
     #A combo is a sorted list of which L_tiles present
     #L_tile_combos is all such combos for the given total number of L_tiles
@@ -49,14 +50,6 @@ def addAllTilingsForNumLTiles(tilings, num_L_tiles, filter_file):
             print(f"num_L_tiles: {str(num_L_tiles).rjust(3, ' ')} out of: {str(MAX_POSSIBLE_L_TILES).rjust(3, ' ')}")
             print(f"      combo: {str(index).rjust(3, ' ')} out of: {str(num_combos).rjust(3, ' ')}")
         filtered_L_tile_locations = getFilteredL_TileLocations(L_tile_combo, filter_file)
-
-        # if(PRINT_PROGRESS):
-        #     # Use the below in loop_rec to print progress
-        #     global max_combos_to_try 
-        #     global current_combo
-        #     max_combos_to_try = functools.reduce(lambda x, y: x * len(y), filtered_L_tile_locations, 1)
-        #     current_combo = 0
-
         loop_rec(0, getEmptyTiling(), filtered_L_tile_locations, 1, tilings)
         if(filter_file):
             print("Filtered Locations:", file = filter_file)
@@ -70,7 +63,7 @@ def loop_rec(n, tiling, filtered_L_tile_locations, start_label, tilings):
     for combo_type_n in filtered_L_tile_locations[n]:
         if(attemptToAddCombo(tiling, n, combo_type_n, start_label)):
             #adding combo succeeded
-            if(n == 3):
+            if(n == (len(L_TILE_OFFSETS) - 1)): #on the last group of tiles
                 tilings.append(copy.deepcopy(tiling))
             else:
                 loop_rec(n + 1, tiling, filtered_L_tile_locations, start_label + len(combo_type_n), tilings)
@@ -86,8 +79,9 @@ def findRightMost(l, item):
 def getNumsOfEachL_tile(L_tile_combo):
     """
         Given a sorted L_tile combo (for example, [0, 0, 0, 2, 3, 3, 3]), return a length 4 array that says how many of each type of L_tile is in the combo. In this case, answer would be [3, 0, 1, 3]
+        Edit: updated so that can handle any number of different tiles of any shapes, not just the 4 L_tiles. Specified entirely by L_TILE_OFFSETS.
     """
-    nums_of_each_L_tile = np.zeros(4, dtype=np.short)
+    nums_of_each_L_tile = np.zeros(len(L_TILE_OFFSETS), dtype=np.short)
     previous_index = -1
     for L_tile_type in L_TILES:
         potential_rightmost_occurence = findRightMost(L_tile_combo, L_tile_type)
@@ -252,10 +246,10 @@ def printOutput(tilings):
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ###########################
     WIDTH = 5
-    HEIGHT = 5
+    HEIGHT = 4
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
-    PRINT_PROGRESS = True              # Recommended for large grids
+    PRINT_PROGRESS = False              # Recommended for large grids
     ###########################################################################
     setupCalculationGlobals(givenWidth = WIDTH, givenHeight = HEIGHT)
     setupOutputGlobals(printIndividualTilings = PRINT_INDIVIDUAL_TILINGS, printFilterTest = PRINT_FILTER_TEST, printProgress = PRINT_PROGRESS)

@@ -1,12 +1,10 @@
 """
     According to https://www.numbersaplenty.com/2023, there are exactly 2023 ways to tile a 4x4 grid using only L tiles and monominos. It does not clarify if rotations or reflections count as different ways, or prove the statement. This Python program will attempt to verify it.
 """
-import numpy as np
-import itertools as it
-import bisect as b
-import copy
+# Note: Profile by doing 'python -m cProfile -s tottime Tiling_2023.py'
+import numpy as np, itertools as it, bisect as b, copy
 
-def setupGlobals(givenWidth, givenHeight):
+def setupCalculationGlobals(givenWidth, givenHeight):
     global WIDTH,  HEIGHT,  TOTAL,  MAX_POSSIBLE_L_TILES,  L_TILES,  LOCATIONS,  L_TILE_OFFSETS
 
     WIDTH = givenWidth
@@ -30,15 +28,30 @@ def setupGlobals(givenWidth, givenHeight):
             ]
         )
 
-def addAllTilings(tilings, num_L_tiles):
+def setupOutputGlobals(printIndividualTilings, printFilterTest):
+    global PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST
+    PRINT_INDIVIDUAL_TILINGS = printIndividualTilings
+    PRINT_FILTER_TEST = printFilterTest
+
+def addAllTilingsForNumLTiles(tilings, num_L_tiles, filter_file):
+    """
+        Given tilings (a list of each possible tiling) and a number of L_tiles from 0 up to MAX_POSSIBLE_L_TILES, adds all possible tilings (considering rotations and reflections to be different) to tilings
+    """
     #A combo is a sorted list of which L_tiles present
     #L_tile_combos is all such combos for the given total number of L_tiles
     L_tile_combos = it.combinations_with_replacement(L_TILES, num_L_tiles) 
     for L_tile_combo in L_tile_combos:
-        filtered_L_tile_locations = getFilteredL_TileLocations(L_tile_combo)
+        filtered_L_tile_locations = getFilteredL_TileLocations(L_tile_combo, filter_file)
         loop_rec(0, getEmptyTiling(), filtered_L_tile_locations, 1, tilings)
+        if(filter_file):
+            print("Filtered Locations:", file = filter_file)
+            printPotentialL_TileLocations(filtered_L_tile_locations, filter_file)
+            print(file = filter_file)
 
 def loop_rec(n, tiling, filtered_L_tile_locations, start_label, tilings):
+    """
+        Recursive helper function for above
+    """
     for combo_type_n in filtered_L_tile_locations[n]:
         if(attemptToAddCombo(tiling, n, combo_type_n, start_label)):
             #adding combo succeeded
@@ -72,7 +85,7 @@ def getNumsOfEachL_tile(L_tile_combo):
             previous_index = potential_rightmost_occurence
     return(nums_of_each_L_tile)
 
-def getPotentialL_tileLocations(L_tile_combo):
+def getPotentialL_tileLocations(L_tile_combo, filter_file):
     """
         Given a combo of which L tiles are present, returns a list with 4 elements, where element i is a list corresponding to L_tile type i.
         The list contains tuples of coordinates, where each tuple is 1 possible combination of locations for element i. The empty tuple corresponds to no usage of L_tile i.
@@ -87,29 +100,34 @@ def getPotentialL_tileLocations(L_tile_combo):
     potential_L_tile_locations = []
     for L_tile_type in L_TILES:
         potential_L_tile_locations.append( 
-            #NOTE: can wrap entire line below in np.array to change list into np.array to speed up; makes debugging printing uglier, but may speed up code
             list(it.combinations(LOCATIONS, nums_of_each_L_tile[L_tile_type]) 
             ))
+    if(filter_file):
+        print(f"L_tile_combo: {L_tile_combo}", file = filter_file)
+        print(f"nums_of_each_L_tile: {nums_of_each_L_tile}", file = filter_file)
+        print(f"potential_L_tile_locations:", file = filter_file)
+        printPotentialL_TileLocations(potential_L_tile_locations, filter_file)
+        print(file = filter_file)
     return(potential_L_tile_locations)
 
-def printPotentialL_TileLocations(potential_L_tile_locations):
+def printPotentialL_TileLocations(potential_L_tile_locations, filter_file):
     """
-        Pretty prints the potential_L_tile_locations
+        Pretty prints the potential_L_tile_locations. filter_file is an already open file object.
     """
-    print("[")
+    print("[", file = filter_file)
     for L_tile_type in L_TILES:
         #print the tuple of combos
         if(len(potential_L_tile_locations[L_tile_type]) == 1): #There's only the empty tuple; can print all on one line
-            print(f"    {potential_L_tile_locations[L_tile_type]}")
+            print(f"    {potential_L_tile_locations[L_tile_type]}", file = filter_file)
         else:
-            print(f"    [\n", end="")
+            print(f"    [\n", end="", file = filter_file)
             for combo in potential_L_tile_locations[L_tile_type]:
-                print(f"        (", end="")
+                print(f"        (", end="", file = filter_file)
                 for coord in combo:
-                    print(f"{coord},", end="")
-                print(f"),\n", end="")
-            print(f"    ]\n")
-    print("]")
+                    print(f"{coord},", end="", file = filter_file)
+                print(f"),\n", end="", file = filter_file)
+            print(f"    ]\n", file = filter_file)
+    print("]", file = filter_file)
 
 def onBoardAndEmpty(tiling, location):
     """
@@ -183,23 +201,56 @@ def removeCombo(tiling, L_tile_type, combo):
     for location in combo:
         removeL_Tile(tiling, L_tile_type, location)
 
-def getFilteredL_TileLocations(L_tile_combo):
+def getFilteredL_TileLocations(L_tile_combo, filter_file):
     """
-        Given an L_tile_combo that says which L_tiles will be in use, get the potential l tile combo locations, but filtered of the internally inconsistent combos
+        Given an L_tile_combo that says which L_tiles will be in use, get the potential l tile combo locations, but filtered of the internally inconsistent combos.
+        If PRINT_FILTER_TEST is True, will print filter test outputs to a file called filter_test_{WIDTH}x{HEIGHT}.txt
     """
     # tup[0] is l_tile_type, and tup[1] is single_type_list_of_combos, which is potential_L_tile_locations[l_tile_type], which is a list of tuples, where each tuple is a combo
-    potential_L_tile_locations = getPotentialL_tileLocations(L_tile_combo)
+    
+    potential_L_tile_locations = getPotentialL_tileLocations(L_tile_combo, filter_file)
     filtered_L_tile_locations = list(map(lambda tup: list(filter(lambda combo_tuple: attemptToAddCombo(getEmptyTiling(), tup[0], combo_tuple, 1), tup[1])), enumerate(potential_L_tile_locations)))
     return(filtered_L_tile_locations)
 
-if(__name__ == "__main__"):
-    setupGlobals(givenWidth = 4, givenHeight = 4)
-    tilings= [] #considering rotated/reflected tilings to be different
-
+def getAllTilings(filter_file):
+    """
+        Once globals have been setup, returns a list of all possible tilings, (considers rotations/reflections to be different)
+    """
+    tilings = []
     for num_L_tiles in range(0, MAX_POSSIBLE_L_TILES + 1):
-        addAllTilings(tilings, num_L_tiles)
-        
-    for tiling in tilings:
-        print(f"{tiling}\n")
-    print(f"The number of tilings is: {len(tilings)}")
+        addAllTilingsForNumLTiles(tilings, num_L_tiles, filter_file)
+    return(tilings)
+
+def printOutput(tilings):
+    """
+        If PRINT_INDIVIDUAL_TILINGS is True, will print all tilings as well as how many there are, otherwise only prints number of tilings.
+        Prints output to a file called tilings_{WIDTH}x{HEIGHT}.txt
+    """
+    tilings_filename = f"tilings_{WIDTH}x{HEIGHT}.txt"
+    with open(tilings_filename, 'w') as f:
+        if(PRINT_INDIVIDUAL_TILINGS): 
+            for index, tiling in enumerate(tilings):
+                print(f"{index + 1}:\n{tiling}\n", file = f)
+        print(f"For {WIDTH} x {HEIGHT} rectangles:", file = f)
+        print(f"The number of tilings is: {len(tilings)}", file = f) 
+
+if(__name__ == "__main__"):
+    ###########################   CONFIGURATION    ###########################
+    WIDTH = 4
+    HEIGHT = 4
+    PRINT_INDIVIDUAL_TILINGS = True
+    PRINT_FILTER_TEST = True                # Not recommended for large grids
+    ###########################################################################
+    setupCalculationGlobals(givenWidth = WIDTH, givenHeight = HEIGHT)
+    setupOutputGlobals(printIndividualTilings = PRINT_INDIVIDUAL_TILINGS, printFilterTest = PRINT_FILTER_TEST)
+    if(PRINT_FILTER_TEST):
+        filter_filename = f"filter_test_{WIDTH}x{HEIGHT}.txt"
+        filter_file = open(filter_filename, 'w')
+    else:
+        filter_file = None
+    tilings= getAllTilings(filter_file) #considering rotated/reflected tilings to be different
+    printOutput(tilings)
+    if(filter_file):
+        filter_file.close()
+    print(f"Completed calculations for {WIDTH} x {HEIGHT} grid.")
 

@@ -51,24 +51,27 @@ def addAllTilingsForNumLTiles(tilings, num_L_tiles, filter_file):
             print(f"num_L_tiles: {str(num_L_tiles).rjust(3, ' ')} out of: {str(MAX_POSSIBLE_L_TILES).rjust(3, ' ')}")
             print(f"      combo: {str(index).rjust(3, ' ')} out of: {str(num_combos).rjust(3, ' ')}")
         filtered_L_tile_locations = getFilteredL_TileLocations(L_tile_combo, filter_file)
-        loop_rec(0, getEmptyTiling(), filtered_L_tile_locations, 1, tilings)
+        loop_rec(0, getEmptyTiling(), filtered_L_tile_locations, 1, tilings, [])
         if(filter_file):
             print("Filtered Locations:", file = filter_file)
             printPotentialL_TileLocations(filtered_L_tile_locations, filter_file)
             print(file = filter_file)
 
-def loop_rec(n, tiling, filtered_L_tile_locations, start_label, tilings):
+def loop_rec(n, tiling, filtered_L_tile_locations, start_label, tilings, combo_accumulator):
     """
         Recursive helper function for above
     """
     for combo_type_n in filtered_L_tile_locations[n]:
         if(attemptToAddCombo(tiling, n, combo_type_n, start_label)):
             #adding combo succeeded
+            combo_accumulator.append(combo_type_n)
             if(n == (len(L_TILE_OFFSETS) - 1)): #on the last group of tiles
-                tilings.append(copy.deepcopy(tiling))
+                tilings[0].append(copy.deepcopy(tiling))
+                tilings[1].append(copy.deepcopy(combo_accumulator))
             else:
-                loop_rec(n + 1, tiling, filtered_L_tile_locations, start_label + len(combo_type_n), tilings)
+                loop_rec(n + 1, tiling, filtered_L_tile_locations, start_label + len(combo_type_n), tilings, combo_accumulator)
             removeCombo(tiling, n, combo_type_n)
+            combo_accumulator.pop()
         
 def findRightMost(l, item):
     """
@@ -226,12 +229,14 @@ def getAllTilings(filter_file):
     """
         Once globals have been setup, returns a list of all possible tilings, (considers rotations/reflections to be different)
     """
-    tilings = []
+    tilings = [[], []]
     for num_L_tiles in range(0, MAX_POSSIBLE_L_TILES + 1):
         addAllTilingsForNumLTiles(tilings, num_L_tiles, filter_file)
     return(tilings)
 
 def printOutput(tilings):
+    #TODO: print the symmetry representations, and then stop printing them.
+    (tilings, symmetry_representation) = tilings
     """
         If PRINT_INDIVIDUAL_TILINGS is True, will print all tilings as well as how many there are, otherwise only prints number of tilings.
         Prints output to a file called tilings_{WIDTH}x{HEIGHT}.txt
@@ -241,6 +246,7 @@ def printOutput(tilings):
         if(PRINT_INDIVIDUAL_TILINGS): 
             for index, tiling in enumerate(tilings):
                 print(f"{index + 1}:\n{tiling}\n", file = f)
+                print(f"{symmetry_representation[index]}\n", file = f)
         print(f"For {WIDTH} x {HEIGHT} rectangles:", file = f)
         print(f"The number of tilings is: {len(tilings)}", file = f)
 
@@ -417,8 +423,8 @@ def run_everything():
         filter_file = open(filter_filename, 'w')
     else:
         filter_file = None
-    tilings= getAllTilings(filter_file) #considering rotated/reflected tilings to be different
-    printOutput(tilings)
+    tilings, symmetry_representations = getAllTilings(filter_file) #considering rotated/reflected tilings to be different
+    printOutput((tilings, symmetry_representations)) #TODO: once no longer need to print symmetry representation, only pass in tilings to this function.
     if(filter_file):
         filter_file.close()
     print(f"Completed calculations for {WIDTH} x {HEIGHT} grid.")
@@ -435,12 +441,12 @@ def plotTest(num_tilings):
 
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
-    WIDTH = 3
+    WIDTH = 4
     HEIGHT = 3
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
-    PRINT_PROGRESS = True              # Recommended for large grids
-    SHOW_IMAGE = True                  # Not recommended for large grids (> 5x5)
+    PRINT_PROGRESS = False              # Recommended for large grids
+    SHOW_IMAGE = False                  # Not recommended for large grids (> 5x5)
     ###########################################################################
     run_everything()
 else:

@@ -313,14 +313,16 @@ def insertComboIntoNewSymmetryRepFor90DegRot(L_tile_type, L_tile_location_combo,
     if(num_times != 1):
         raise Exception("Unimplemented")
     new_top_left_locs = []
+    offset_indexes = (0, None, 1, 1) #WARN be careful when rotating multiple times
     for L_tile_location in L_tile_location_combo:
-        if(L_tile_type == 0): #top right corner
-            future_identifer_loc = np.add(L_tile_location, L_TILE_OFFSETS[0][0]) # the current location of the square in the corner, the top right, which for type 0 L tiles, will be top left corner after 90 degree counter clockwise rotation
-        elif(L_tile_type == 1): #bottom right
-            future_identifer_loc = L_tile_location # bottom rights become top left. Top left square becomes new top left square
-        else:
-             raise Exception("Unimplemented") #TODO
-        new_top_left_loc = rotateComputerCoordsCCW(1, future_identifer_loc, height, width)
+        offset_index = offset_indexes[L_tile_type] #WARN be careful when rotating multiple times
+        future_identifier_loc = L_tile_location if(offset_index is None) else (np.add(L_tile_location, L_TILE_OFFSETS[L_tile_type][offset_index]))
+        # if(L_tile_type == 0): #top right corner
+        #     future_identifer_loc = np.add(L_tile_location, L_TILE_OFFSETS[0][0]) # the current location of the square in the corner, the top right, which for type 0 L tiles, will be top left corner after 90 degree counter clockwise rotation
+        # elif(L_tile_type == 1): #bottom right
+        #     future_identifer_loc = L_tile_location # bottom rights become top left. Top left square becomes new top left square
+        # else:
+        new_top_left_loc = rotateComputerCoordsCCW(1, future_identifier_loc, height, width)
         new_top_left_locs.append(new_top_left_loc)
 
     new_top_left_locs.sort() #TODO test that this sort actually works

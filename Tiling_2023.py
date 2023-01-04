@@ -358,7 +358,7 @@ def getTilingsFilteredForSymmetry(tilings_container):
         symmetry_reps_this_tiling = getSymmetries(symmetry_representation)
         for symmetry in symmetry_reps_this_tiling:
             if(symmetry in filtered_tiling_symmetry_representations):
-                duplicate = True
+                duplicate = True #TODO: print that this tiling is a duplicate, and maybe add some info to set to display which previous tiling it's a duplicate of
                 break
         if(not(duplicate)):
             filtered_tiling_symmetry_representations.add(symmetry_representation)

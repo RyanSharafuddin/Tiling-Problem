@@ -321,7 +321,7 @@ def run_everything():
     setupCalculationGlobals(givenWidth = WIDTH, givenHeight = HEIGHT)
     setupOutputGlobals(printIndividualTilings = PRINT_INDIVIDUAL_TILINGS, printFilterTest = PRINT_FILTER_TEST, printProgress = PRINT_PROGRESS)
     if(PRINT_FILTER_TEST):
-        filter_filename = f"filter_test_{WIDTH}x{HEIGHT}_{len(tilings)}.txt"
+        filter_filename = f"filter_test_{WIDTH}x{HEIGHT}.txt"
         filter_file = open(filter_filename, 'w')
     else:
         filter_file = None
@@ -342,10 +342,10 @@ def plotTest(num_tilings):
 
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
-    WIDTH = 5
-    HEIGHT = 5
+    WIDTH = 3
+    HEIGHT = 3
     PRINT_INDIVIDUAL_TILINGS = True
-    PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
+    PRINT_FILTER_TEST = True          # Not recommended for large grids (> 5x5)
     PRINT_PROGRESS = True              # Recommended for large grids
     SHOW_IMAGE = True                  # Not recommended for large grids (> 5x5)
     ###########################################################################

@@ -19,7 +19,7 @@
 from Tiling_2023 import *
 from globals import *
 
-#buncha errors; wait until get there
+#Fails because rotate function not implemented yet
 # def test_symmetry():
 #     #NOTE: setup globals in globals.py
 #     assert(WIDTH == 3)
@@ -38,10 +38,19 @@ from globals import *
 #     symmetric_tilings_container = [[tiling_a, tiling_b], [sym_rep_a, sym_rep_b]]
 #     two_empties = [tilings[0], copy.deepcopy(tilings[0])]
 #     sym_rep_empty = symmetry_representations[0]
-#     two_empties_tilings_container = [[two_empties], [sym_rep_empty, copy.deepcopy(sym_rep_empty)]]
+#     two_empties_tilings_container = [two_empties, [sym_rep_empty, copy.deepcopy(sym_rep_empty)]]
 
-#     filtered_empties = getTilingsFilteredForSymmetry(two_empties_tilings_container)
+#     # filtered_empties = getTilingsFilteredForSymmetry(two_empties_tilings_container)
 #     filtered_symmetries = getTilingsFilteredForSymmetry(symmetric_tilings_container)
 
-#     assert(len(filtered_empties) == 1)
+#     # assert(len(filtered_empties) == 1)
 #     assert(len(filtered_symmetries) == 1) #Expected to fail until real symmetry filtering implemented
+
+def test_rotate_sym_rep():
+    tilings, symmetry_representations = run_everything()
+    tiling, sym_rep = tilings[2], symmetry_representations[2]
+    print(f"tiling:\n {tiling}\n")
+    print(f"corresponding sym_rep:\n {sym_rep}")
+
+    print(f"rotated 90 degrees ccw: \n{np.rot90(tiling, 1)}\n")
+    print(f"rotate its sym_rep: \n{rotSymRepCounterclockwise(sym_rep, 1, 3, 3)}")

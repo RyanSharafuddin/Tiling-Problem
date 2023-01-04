@@ -1,2 +1,0 @@
-For 3 x 3 rectangles:
-The number of tilings is: 39

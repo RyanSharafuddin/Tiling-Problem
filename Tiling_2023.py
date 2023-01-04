@@ -64,10 +64,10 @@ def loop_rec(n, tiling, filtered_L_tile_locations, start_label, tilings, combo_a
     for combo_type_n in filtered_L_tile_locations[n]:
         if(attemptToAddCombo(tiling, n, combo_type_n, start_label)):
             #adding combo succeeded
-            combo_accumulator.append(combo_type_n)
+            combo_accumulator.append(tuple(tuple(i) for i in combo_type_n))
             if(n == (len(L_TILE_OFFSETS) - 1)): #on the last group of tiles
                 tilings[0].append(copy.deepcopy(tiling))
-                tilings[1].append(copy.deepcopy(combo_accumulator))
+                tilings[1].append(tuple(combo_accumulator))
             else:
                 loop_rec(n + 1, tiling, filtered_L_tile_locations, start_label + len(combo_type_n), tilings, combo_accumulator)
             removeCombo(tiling, n, combo_type_n)
@@ -271,7 +271,7 @@ def printOutput(tilings):
         1) Modify loop_rec to attach the needed information to make new_tilings = [original_tilings, new_info_list], and modify printing to print it out with the original tilings.: DONE
 
         2) Make a function that rotates this representation 90 degrees counterclockwise.
-            CURRENT PROGRESS: on the rotates function, only handles one case so far: one 90 degree rotation of type 0 L tiles. Test it.
+            CURRENT PROGRESS: on the rotates function, only handles some cases so far: Test it on tilings with multiple tiles of different types.
         3) Make a function that reflects this representation horizontally.
         4) Modify below 2 symmetry functions to use this representation.
         5) Print out the filtered tilings (perhaps with a note about which of the original tilings were eliminated and which they were symmetric to)
@@ -281,68 +281,76 @@ def rotateComputerCoordsCCW(num_times, coord, height, width):
     """
         given a coords array in form [y,x], returns new coords which are these rotated 90 degrees counterclockwise num_times. In form [y,x]
     """
+    #given y,x of upper left square of an L tile of L_tile_type, calculate where the upper left square of the rotated result would be, given height and width
+    #   With real coords, a 90 degree counter clockwise rotation centered at origin does this:
+    # (x, y) -> (-y, x) -> (-x, -y) -> (y, -x) -> (x, y)
+
+    # Imagine a shadow coordinate system centered at center of matrix. (In the computer, the coordinates of a cell in the array are the coordinates of the upper left corner)
+    
+    # computerX = shadowX + (width - 1)/2
+    # computerY = -shadowY + (height - 1)/2
+    # To rotate 90 degrees in computer coords:
+    # computer coords: (computerX, computerY)
+    #                 |
+    #                 V
+    # shadow coords:   (computerX - (width - 1)/2, -computerY + (height - 1)/2)
+    #                |
+    #                V
+    # shadow coords transformed: (computerY - (height - 1)/2, computerX - (width - 1)/2)
+    #                |
+    #                V
+    # computer coords transformed: (computerY - (height - 1)/2 + (width - 1)/2,
+    #                                -computerX + (width - 1)/2 + (height - 1)/2)
     if(num_times != 1):
-        raise Exception("Unimplemented")
+        raise Exception("Unimplemented") #TODO
     computerY, computerX = coord
-    transformed_computerX = computerY - (height - 1)/2 + (width -1)/2
-    transformed_computerY = -1*computerX + (width - 1)/2 + (height - 1)/2
-    return(np.array([transformed_computerY, transformed_computerX])) 
+    transformed_computerX = int(computerY - (height - 1)/2 + (width -1)/2)
+    transformed_computerY = int(-1*computerX + (width - 1)/2 + (height - 1)/2)
+    return((transformed_computerY, transformed_computerX)) 
 
 def insertComboIntoNewSymmetryRepFor90DegRot(L_tile_type, L_tile_location_combo, num_times, new_symmetry_representation, height, width):
-    #WARN: this function only handles 90 degree ccw rotations as of now
+    #WARN: this function only handles 90 degree ccw rotations as of now. Change and then change name
     if(num_times != 1):
         raise Exception("Unimplemented")
     new_top_left_locs = []
     for L_tile_location in L_tile_location_combo:
         if(L_tile_type == 0): #top right corner
             future_identifer_loc = np.add(L_tile_location, L_TILE_OFFSETS[0][0]) # the current location of the square in the corner, the top right, which for type 0 L tiles, will be top left corner after 90 degree counter clockwise rotation
-            new_top_left_loc = rotateComputerCoordsCCW(1, future_identifer_loc, height, width)
-            new_top_left_locs.append(new_top_left_loc)
+        elif(L_tile_type == 1): #bottom right
+            future_identifer_loc = L_tile_location # bottom rights become top left. Top left square becomes new top left square
         else:
-             raise Exception("Unimplemented")
-    #TODO: sort new_top_left_locs by closeness to top left, and put them in in the right spot in new_symmetry_representation
-    new_top_left_locs.sort()
-    if(L_tile_type == 0): #top right corner
-        new_symmetry_representation[3] = new_top_left_locs #top right becomes bottom left with one rotation ccw
+             raise Exception("Unimplemented") #TODO
+        new_top_left_loc = rotateComputerCoordsCCW(1, future_identifer_loc, height, width)
+        new_top_left_locs.append(new_top_left_loc)
+
+    new_top_left_locs.sort() #TODO test that this sort actually works
+    for i in range(0, 4): #TODO change once implement rotating multiple times, since this is only valid for rotating once
+        if(L_tile_type == i):
+            new_symmetry_representation[(i - 1) % 4] = tuple(new_top_left_locs) #since L_TILE_OFFSETS are listed in rotating clockwise order
+    # if(L_tile_type == 0): #top right corner
+    #     new_symmetry_representation[3] = tuple(new_top_left_locs) #top right becomes bottom left with one rotation ccw
+    # elif(L_tile_type == 1):
+    #     new_symmetry_representation[0] = tuple(new_top_left_locs)
 
 
 def rotSymRepCounterclockwise(symmetry_representation, num_times, height, width):
     #NOTE: returns a new sym rep; does not mutate old one
     #num_times corresponds to how many 90 degree counterclockwise turns
-    new_symmetry_representation = np.empty(4, dtype=object)
+    new_symmetry_representation = [(), (), (), ()]
     #NOTE: L_tile_location_combo is a tuple
     for (L_tile_type, L_tile_location_combo) in enumerate(symmetry_representation):
         insertComboIntoNewSymmetryRepFor90DegRot(L_tile_type, L_tile_location_combo, num_times, new_symmetry_representation, height, width)
-    return(new_symmetry_representation)
-        #TODO: given y,x of upper left square of an L tile of L_tile_type, calculate where the upper left square of the rotated result would be, given height and width
-        #   With real coords, a 90 degree counter clockwise rotation centered at origin does this:
-        # (x, y) -> (-y, x) -> (-x, -y) -> (y, -x) -> (x, y)
-
-        # Imagine a shadow coordinate system centered at center of matrix. (In the computer, the coordinates of a cell in the array are the coordinates of the upper left corner)
-        
-        # computerX = shadowX + (width - 1)/2
-        # computerY = -shadowY + (height - 1)/2
-        # To rotate 90 degrees in computer coords:
-        # computer coords: (computerX, computerY)
-        #                 |
-        #                 V
-        # shadow coords:   (computerX - (width - 1)/2, -computerY + (height - 1)/2)
-        #                |
-        #                V
-        # shadow coords transformed: (computerY - (height - 1)/2, computerX - (width - 1)/2)
-        #                |
-        #                V
-        # computer coords transformed: (computerY - (height - 1)/2 + (width - 1)/2,
-        #                                -computerX + (width - 1)/2 + (height - 1)/2)
-        #
+    return(tuple(new_symmetry_representation))
         # An L tile of type 0 (top right corner) becomes a type 3 L tile (top left). 
         # The square at its first offset (the corner square, offset [0,1] from top left), becomes its new top left.
-    #NOTE: remember to sort the combo list by who is higher and then more to the left as a tiebreaker before returning it.
 
 def getTilingsFilteredForSymmetry(tilings_container):
+    # print(f"tilings_container: \n{tilings_container}")
     filtered_tilings = []
     filtered_tiling_symmetry_representations = set()
     for index, symmetry_representation in enumerate(tilings_container[1]):
+        # print(f"IN GET TILINGS FILTERED\nTiling:\n{tilings_container[0][index]}\nsym_rep\n{symmetry_representation}")
+        # symmetry_representation = tuple(symmetry_representation)
         duplicate = False
         symmetry_reps_this_tiling = getSymmetries(symmetry_representation)
         for symmetry in symmetry_reps_this_tiling:
@@ -351,18 +359,21 @@ def getTilingsFilteredForSymmetry(tilings_container):
                 break
         if(not(duplicate)):
             filtered_tiling_symmetry_representations.add(symmetry_representation)
-            filtered_tilings.add(tilings_container[0][index])
+            filtered_tilings.append(tilings_container[0][index])
     return(filtered_tilings)
+
+# def tuplify(sym_rep):
+#     new_sym_rep = ((tuple), (), (), ())
 
 def getSymmetries(symmetry_representation):
     #NOTE: need to change to work with other representation in plan
     symmetriesSet = set()
     if(HEIGHT == WIDTH):
         #square, 8 symmetries
-        rot0 = tuple(map(lambda tup_of_l: tuple(map(lambda l: tuple(l), tup_of_l)), symmetry_representation))
+        rot0 = symmetry_representation
     #     #np.rot90 rotates counterclockwise
         # rot90 = np.rot90(tiling, 1)
-        rot90 = tuple(map(lambda tup_of_l: tuple(map(lambda l: tuple(l), tup_of_l)), rotSymRepCounterclockwise(symmetry_representation, 1, HEIGHT, WIDTH)))
+        rot90 = rotSymRepCounterclockwise(symmetry_representation, 1, HEIGHT, WIDTH)
     #     rot180 = np.rot90(tiling, 2)
     #     rot270 = np.rot90(tiling, 3)
 
@@ -397,7 +408,7 @@ def getSymmetries(symmetry_representation):
     # # for symmetry in symmetriesSet:
     # #     print(np.array(symmetry), end="\n\n")
 
-    # return(symmetriesSet)
+    return(symmetriesSet)
 
 def tilingToTup(tiling):
     return(tuple(map(tuple, tiling)))
@@ -502,11 +513,11 @@ def plotTest(num_tilings):
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
     WIDTH = 4
-    HEIGHT = 3
+    HEIGHT = 4
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
     PRINT_PROGRESS = False              # Recommended for large grids
-    SHOW_IMAGE = False                  # Not recommended for large grids (> 5x5)
+    SHOW_IMAGE = True                  # Not recommended for large grids (> 5x5)
     ###########################################################################
     run_everything()
 else:

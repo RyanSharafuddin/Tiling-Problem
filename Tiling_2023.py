@@ -260,7 +260,8 @@ def printOutput(tilings):
     IDEA: 
         Have loop_rec append a tuple to tilings, which includes the original tiling as well as a list of lists (say, l) [[], [], [], []], where each second-level list corresponds to one of the 4 types of L tiles. l[i] will be a list of coordinates of the upper left corners of L tile type i, sorted by being nearest top, then leftmost (upper left is first, then upper right, etc) (so, 1 combo from the filtered_L_tile_locations). These are guaranteed to be exactly the same for the same tiling. Then, make a function that 'rotates/reflects' this representation, since you know that a transformation will transform one type of L tile into another and where its new upper left corner will be. Then, can compare those for symmetries.
     STEPS:
-        0) Write a test case using known output that you know would fail using below method, and verify it fails.
+        0) Write a test case using known output that you know would fail using below method, and verify it fails: DONE
+
         1) Modify loop_rec to attach the needed information, and modify printing to print it out with the tilings.
         2) Make a function that rotates this representation 90 degrees counterclockwise.
         3) Make a function that reflects this representation horizontally.
@@ -268,61 +269,64 @@ def printOutput(tilings):
         5) Print out the filtered tilings (perhaps with a note about which of the original tilings were eliminated and which they were symmetric to)
 """
 
-# def getTilingsFilteredForSymmetry(tilings):
-#     symmetries_set = set()
-#     for tiling in tilings:
-#         duplicate = False
-#         symmetries_set_this_tiling = getSymmetries(tiling)
-#         for symmetry in symmetries_set_this_tiling:
-#             if(symmetry in symmetries_set):
-#                 duplicate = True
-#                 break
-#         if(not(duplicate)):
-#             symmetries_set.add(tiling)
-#     return(symmetries_set)
+def getTilingsFilteredForSymmetry(tilings):
+    filtered_tiling_tuples = set()
+    for tiling in tilings:
+        duplicate = False
+        symmetries_set_this_tiling = getSymmetries(tiling)
+        for symmetry in symmetries_set_this_tiling:
+            if(symmetry in filtered_tiling_tuples):
+                duplicate = True
+                break
+        if(not(duplicate)):
+            filtered_tiling_tuples.add(tilingToTup(tiling))
+    return(filtered_tiling_tuples)
 
-# def getSymmetries(tiling):
-#     symmetriesSet = set()
-#     if(HEIGHT == WIDTH):
-#         #square, 8 symmetries
-#         rot0 = tiling
-#         rot90 = np.rot90(tiling, 1)
-#         rot180 = np.rot90(tiling, 2)
-#         rot270 = np.rot90(tiling, 3)
+def getSymmetries(tiling):
+    #NOTE: need to change to work with other representation in plan
+    symmetriesSet = set()
+    if(HEIGHT == WIDTH):
+        #square, 8 symmetries
+        rot0 = tiling
+        #np.rot90 rotates counterclockwise
+        rot90 = np.rot90(tiling, 1)
+        rot180 = np.rot90(tiling, 2)
+        rot270 = np.rot90(tiling, 3)
 
-#         rot0_reflect_horizontal = np.flip(rot0, 0)
-#         rot90_reflect_horizontal = np.flip(rot90, 0)
-#         rot180_reflect_horizontal = np.flip(rot180, 0)
-#         rot270_reflect_horizontal = np.flip(rot270, 0)
+        #reflect horizontal means across horizontal axis
+        rot0_reflect_horizontal = np.flip(rot0, 0)
+        rot90_reflect_horizontal = np.flip(rot90, 0)
+        rot180_reflect_horizontal = np.flip(rot180, 0)
+        rot270_reflect_horizontal = np.flip(rot270, 0)
         
-#         symmetries_list = [rot0, rot90, rot180, rot270, rot0_reflect_horizontal, rot90_reflect_horizontal, rot180_reflect_horizontal, rot270_reflect_horizontal]
+        symmetries_list = [rot0, rot90, rot180, rot270, rot0_reflect_horizontal, rot90_reflect_horizontal, rot180_reflect_horizontal, rot270_reflect_horizontal]
 
-#     else:
-#         #rectangle, 4 symmetries
-#         rot0 = tiling
-#         rot180 = np.rot90(tiling, 2)
+    else:
+        #rectangle, 4 symmetries
+        rot0 = tiling
+        rot180 = np.rot90(tiling, 2)
 
-#         reflect_horizontal = np.flip(rot0, 0)
-#         reflect_vertical = np.flip(rot0, 1)
+        reflect_horizontal = np.flip(rot0, 0)
+        reflect_vertical = np.flip(rot0, 1)
         
-#         symmetries_list = [rot0, rot180, reflect_horizontal, reflect_vertical]
+        symmetries_list = [rot0, rot180, reflect_horizontal, reflect_vertical]
 
-#     print("Printing symmetries in symmetries list: ")
-#     for symmetry in symmetries_list:
-#         print(symmetry)
+    # print("Printing symmetries in symmetries list: ")
+    # for symmetry in symmetries_list:
+    #     print(symmetry, end="\n\n")
     
-#     symmetries_tuple_list = map(tilingToTup, symmetries_list)
-#     for symmetry_tuple in symmetries_tuple_list:
-#         symmetriesSet.add(symmetry_tuple)
+    symmetries_tuple_list = map(tilingToTup, symmetries_list)
+    for symmetry_tuple in symmetries_tuple_list:
+        symmetriesSet.add(symmetry_tuple)
 
-#     print("Printing symmetries in symmetries set: ")
-#     for symmetry in symmetriesSet:
-#         print(np.array(symmetry))
+    # print("Printing symmetries in symmetries set: ")
+    # for symmetry in symmetriesSet:
+    #     print(np.array(symmetry), end="\n\n")
 
-#     return(symmetriesSet)
+    return(symmetriesSet)
 
-# def tilingToTup(tiling):
-#     return(tuple(map(tuple, tiling)))
+def tilingToTup(tiling):
+    return(tuple(map(tuple, tiling)))
     
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ###########################
@@ -409,7 +413,7 @@ def run_everything():
     setupCalculationGlobals(givenWidth = WIDTH, givenHeight = HEIGHT)
     setupOutputGlobals(printIndividualTilings = PRINT_INDIVIDUAL_TILINGS, printFilterTest = PRINT_FILTER_TEST, printProgress = PRINT_PROGRESS)
     if(PRINT_FILTER_TEST):
-        filter_filename = f"filter_test_{WIDTH}x{HEIGHT}_{len(tilings)}.txt"
+        filter_filename = f"filter_test_{WIDTH}x{HEIGHT}.txt"
         filter_file = open(filter_filename, 'w')
     else:
         filter_file = None
@@ -423,6 +427,7 @@ def run_everything():
         print("Creating image . . .")
         plotAllTilings(tilings)
         print("Finished creating image.")
+    return(tilings) #only used for pytest functions
 
 def plotTest(num_tilings):
     tilings = np.random.random_integers(0, 7, size=(num_tilings, HEIGHT, WIDTH))
@@ -430,11 +435,14 @@ def plotTest(num_tilings):
 
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
-    WIDTH = 4
-    HEIGHT = 4
+    WIDTH = 3
+    HEIGHT = 3
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
     PRINT_PROGRESS = True              # Recommended for large grids
     SHOW_IMAGE = True                  # Not recommended for large grids (> 5x5)
     ###########################################################################
     run_everything()
+else:
+    # This is being imported into the test file
+    from globals import *

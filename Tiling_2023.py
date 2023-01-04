@@ -268,78 +268,136 @@ def printOutput(tilings):
     STEPS:
         0) Write a test case using known output that you know would fail using below method, and verify it fails: DONE
 
-        1) Modify loop_rec to attach the needed information to make new_tilings = [original_tilings, new_info_list], and modify printing to print it out with the original tilings.
+        1) Modify loop_rec to attach the needed information to make new_tilings = [original_tilings, new_info_list], and modify printing to print it out with the original tilings.: DONE
+
         2) Make a function that rotates this representation 90 degrees counterclockwise.
+            CURRENT PROGRESS: on the rotates function, only handles one case so far: one 90 degree rotation of type 0 L tiles. Test it.
         3) Make a function that reflects this representation horizontally.
         4) Modify below 2 symmetry functions to use this representation.
         5) Print out the filtered tilings (perhaps with a note about which of the original tilings were eliminated and which they were symmetric to)
 """
 
-def rotcounterclockwise(symmetry_representation, num_times, height, width):
+def rotateComputerCoordsCCW(num_times, coord, height, width):
+    """
+        given a coords array in form [y,x], returns new coords which are these rotated 90 degrees counterclockwise num_times. In form [y,x]
+    """
+    if(num_times != 1):
+        raise Exception("Unimplemented")
+    computerY, computerX = coord
+    transformed_computerX = computerY - (height - 1)/2 + (width -1)/2
+    transformed_computerY = -1*computerX + (width - 1)/2 + (height - 1)/2
+    return(np.array([transformed_computerY, transformed_computerX])) 
+
+def insertComboIntoNewSymmetryRepFor90DegRot(L_tile_type, L_tile_location_combo, num_times, new_symmetry_representation, height, width):
+    #WARN: this function only handles 90 degree ccw rotations as of now
+    if(num_times != 1):
+        raise Exception("Unimplemented")
+    new_top_left_locs = []
+    for L_tile_location in L_tile_location_combo:
+        if(L_tile_type == 0): #top right corner
+            future_identifer_loc = np.add(L_tile_location, L_TILE_OFFSETS[0][0]) # the current location of the square in the corner, the top right, which for type 0 L tiles, will be top left corner after 90 degree counter clockwise rotation
+            new_top_left_loc = rotateComputerCoordsCCW(1, future_identifer_loc, height, width)
+            new_top_left_locs.append(new_top_left_loc)
+        else:
+             raise Exception("Unimplemented")
+    #TODO: sort new_top_left_locs by closeness to top left, and put them in in the right spot in new_symmetry_representation
+    new_top_left_locs.sort()
+    if(L_tile_type == 0): #top right corner
+        new_symmetry_representation[3] = new_top_left_locs #top right becomes bottom left with one rotation ccw
+
+
+def rotSymRepCounterclockwise(symmetry_representation, num_times, height, width):
+    #NOTE: returns a new sym rep; does not mutate old one
     #num_times corresponds to how many 90 degree counterclockwise turns
-    new_symmetry_represntation = np.array(4, dtype=object)
-    #NOTE: l_tile_location_combo is a tuple
-    for (L_tile_type, l_tile_location_combo) in enumerate(symmetry_representation):
-        raise(Exception("Unimplemented"))
-        #TODO: given y,x of upper left square of an l tile of l_tile_type, calculate where the upper left square of the rotated result would be, given height and width
+    new_symmetry_representation = np.empty(4, dtype=object)
+    #NOTE: L_tile_location_combo is a tuple
+    for (L_tile_type, L_tile_location_combo) in enumerate(symmetry_representation):
+        insertComboIntoNewSymmetryRepFor90DegRot(L_tile_type, L_tile_location_combo, num_times, new_symmetry_representation, height, width)
+    return(new_symmetry_representation)
+        #TODO: given y,x of upper left square of an L tile of L_tile_type, calculate where the upper left square of the rotated result would be, given height and width
+        #   With real coords, a 90 degree counter clockwise rotation centered at origin does this:
+        # (x, y) -> (-y, x) -> (-x, -y) -> (y, -x) -> (x, y)
+
+        # Imagine a shadow coordinate system centered at center of matrix. (In the computer, the coordinates of a cell in the array are the coordinates of the upper left corner)
+        
+        # computerX = shadowX + (width - 1)/2
+        # computerY = -shadowY + (height - 1)/2
+        # To rotate 90 degrees in computer coords:
+        # computer coords: (computerX, computerY)
+        #                 |
+        #                 V
+        # shadow coords:   (computerX - (width - 1)/2, -computerY + (height - 1)/2)
+        #                |
+        #                V
+        # shadow coords transformed: (computerY - (height - 1)/2, computerX - (width - 1)/2)
+        #                |
+        #                V
+        # computer coords transformed: (computerY - (height - 1)/2 + (width - 1)/2,
+        #                                -computerX + (width - 1)/2 + (height - 1)/2)
         #
+        # An L tile of type 0 (top right corner) becomes a type 3 L tile (top left). 
+        # The square at its first offset (the corner square, offset [0,1] from top left), becomes its new top left.
     #NOTE: remember to sort the combo list by who is higher and then more to the left as a tiebreaker before returning it.
 
-def getTilingsFilteredForSymmetry(tilings):
-    filtered_tiling_tuples = set()
-    for tiling in tilings:
+def getTilingsFilteredForSymmetry(tilings_container):
+    filtered_tilings = []
+    filtered_tiling_symmetry_representations = set()
+    for index, symmetry_representation in enumerate(tilings_container[1]):
         duplicate = False
-        symmetries_set_this_tiling = getSymmetries(tiling)
-        for symmetry in symmetries_set_this_tiling:
-            if(symmetry in filtered_tiling_tuples):
+        symmetry_reps_this_tiling = getSymmetries(symmetry_representation)
+        for symmetry in symmetry_reps_this_tiling:
+            if(symmetry in filtered_tiling_symmetry_representations):
                 duplicate = True
                 break
         if(not(duplicate)):
-            filtered_tiling_tuples.add(tilingToTup(tiling))
-    return(filtered_tiling_tuples)
+            filtered_tiling_symmetry_representations.add(symmetry_representation)
+            filtered_tilings.add(tilings_container[0][index])
+    return(filtered_tilings)
 
-def getSymmetries(tiling):
+def getSymmetries(symmetry_representation):
     #NOTE: need to change to work with other representation in plan
     symmetriesSet = set()
     if(HEIGHT == WIDTH):
         #square, 8 symmetries
-        rot0 = tiling
-        #np.rot90 rotates counterclockwise
-        rot90 = np.rot90(tiling, 1)
-        rot180 = np.rot90(tiling, 2)
-        rot270 = np.rot90(tiling, 3)
+        rot0 = tuple(map(lambda tup_of_l: tuple(map(lambda l: tuple(l), tup_of_l)), symmetry_representation))
+    #     #np.rot90 rotates counterclockwise
+        # rot90 = np.rot90(tiling, 1)
+        rot90 = tuple(map(lambda tup_of_l: tuple(map(lambda l: tuple(l), tup_of_l)), rotSymRepCounterclockwise(symmetry_representation, 1, HEIGHT, WIDTH)))
+    #     rot180 = np.rot90(tiling, 2)
+    #     rot270 = np.rot90(tiling, 3)
 
-        #reflect horizontal means across horizontal axis
-        rot0_reflect_horizontal = np.flip(rot0, 0)
-        rot90_reflect_horizontal = np.flip(rot90, 0)
-        rot180_reflect_horizontal = np.flip(rot180, 0)
-        rot270_reflect_horizontal = np.flip(rot270, 0)
+    #     #reflect horizontal means across horizontal axis
+    #     rot0_reflect_horizontal = np.flip(rot0, 0)
+    #     rot90_reflect_horizontal = np.flip(rot90, 0)
+    #     rot180_reflect_horizontal = np.flip(rot180, 0)
+    #     rot270_reflect_horizontal = np.flip(rot270, 0)
         
-        symmetries_list = [rot0, rot90, rot180, rot270, rot0_reflect_horizontal, rot90_reflect_horizontal, rot180_reflect_horizontal, rot270_reflect_horizontal]
+    #     symmetries_list = [rot0, rot90, rot180, rot270, rot0_reflect_horizontal, rot90_reflect_horizontal, rot180_reflect_horizontal, rot270_reflect_horizontal]
+    symmetriesSet.update([rot0, rot90])
 
-    else:
-        #rectangle, 4 symmetries
-        rot0 = tiling
-        rot180 = np.rot90(tiling, 2)
+    # else:
+    #     #rectangle, 4 symmetries
+    #     rot0 = tiling
+    #     rot180 = np.rot90(tiling, 2)
 
-        reflect_horizontal = np.flip(rot0, 0)
-        reflect_vertical = np.flip(rot0, 1)
+    #     reflect_horizontal = np.flip(rot0, 0)
+    #     reflect_vertical = np.flip(rot0, 1)
         
-        symmetries_list = [rot0, rot180, reflect_horizontal, reflect_vertical]
+    #     symmetries_list = [rot0, rot180, reflect_horizontal, reflect_vertical]
 
-    # print("Printing symmetries in symmetries list: ")
-    # for symmetry in symmetries_list:
-    #     print(symmetry, end="\n\n")
+    # # print("Printing symmetries in symmetries list: ")
+    # # for symmetry in symmetries_list:
+    # #     print(symmetry, end="\n\n")
     
-    symmetries_tuple_list = map(tilingToTup, symmetries_list)
-    for symmetry_tuple in symmetries_tuple_list:
-        symmetriesSet.add(symmetry_tuple)
+    # symmetries_tuple_list = map(tilingToTup, symmetries_list)
+    # for symmetry_tuple in symmetries_tuple_list:
+    #     symmetriesSet.add(symmetry_tuple)
 
-    # print("Printing symmetries in symmetries set: ")
-    # for symmetry in symmetriesSet:
-    #     print(np.array(symmetry), end="\n\n")
+    # # print("Printing symmetries in symmetries set: ")
+    # # for symmetry in symmetriesSet:
+    # #     print(np.array(symmetry), end="\n\n")
 
-    return(symmetriesSet)
+    # return(symmetriesSet)
 
 def tilingToTup(tiling):
     return(tuple(map(tuple, tiling)))
@@ -435,7 +493,7 @@ def run_everything():
         print("Creating image . . .")
         plotAllTilings(tilings)
         print("Finished creating image.")
-    return(tilings) #only used for pytest functions
+    return((tilings, symmetry_representations)) #only used for pytest functions
 
 def plotTest(num_tilings):
     tilings = np.random.random_integers(0, 7, size=(num_tilings, HEIGHT, WIDTH))

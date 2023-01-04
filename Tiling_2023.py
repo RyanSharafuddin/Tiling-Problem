@@ -236,7 +236,7 @@ def printOutput(tilings):
         If PRINT_INDIVIDUAL_TILINGS is True, will print all tilings as well as how many there are, otherwise only prints number of tilings.
         Prints output to a file called tilings_{WIDTH}x{HEIGHT}.txt
     """
-    tilings_filename = f"tilings_{WIDTH}x{HEIGHT}.txt"
+    tilings_filename = f"tilings_{WIDTH}x{HEIGHT}_{len(tilings)}.txt"
     with open(tilings_filename, 'w') as f:
         if(PRINT_INDIVIDUAL_TILINGS): 
             for index, tiling in enumerate(tilings):
@@ -263,18 +263,19 @@ def plotAllTilings(tilings):
         [28, 74, 33], 
         [172, 136, 191], 
         [69, 5, 23]
+        #NOTE: will need to add more colors if want to graph tilings with more than 9 L tiles. Consider picking new colors randomly.
         ], dtype=int)
 
     PLOT_CELLS_WIDTH = math.ceil(len(tilings) ** .5) * (WIDTH)
     PLOT_CELLS_HEIGHT = math.ceil(len(tilings) / math.ceil(len(tilings) ** .5)) * (HEIGHT) 
 
-    print(f"PLOT_CELLS_HEIGHT: {PLOT_CELLS_HEIGHT}, PLOT_CELLS_WIDTH:  {PLOT_CELLS_WIDTH}")
+    # print(f"PLOT_CELLS_HEIGHT: {PLOT_CELLS_HEIGHT}, PLOT_CELLS_WIDTH:  {PLOT_CELLS_WIDTH}")
     colors = np.ones((PLOT_CELLS_HEIGHT, PLOT_CELLS_WIDTH, 3), dtype=int) * 255
 
     tilings_in_column = len(colors) // (HEIGHT) 
     tilings_in_row = len(colors[0]) // (WIDTH)
 
-    print(f"tilings_in_column: {tilings_in_column}, tilings_in_row:  {tilings_in_row}")
+    # print(f"tilings_in_column: {tilings_in_column}, tilings_in_row:  {tilings_in_row}")
 
     for index, tiling in enumerate(tilings):
         upper_left_x = (index % tilings_in_row) * (WIDTH) 
@@ -282,12 +283,12 @@ def plotAllTilings(tilings):
         # print(f"index: {index}, upper_left_x: {upper_left_x}, upper_left_y: {upper_left_y}")
         plotTiling([upper_left_y, upper_left_x], tiling, colors)
     
-    if(len(tilings <= 5000)):
+    if(len(tilings) <= 5000):
         PLT_SIZE = 10
         lw_ratio = .25
     else:
         PLT_SIZE = 20
-        lw_ratio = 0
+        lw_ratio = .5
 
     fig = plt.figure()
     fig.set_figwidth(PLT_SIZE)
@@ -303,7 +304,7 @@ def plotAllTilings(tilings):
     # ax.minorticks_off()
 
     mticker.Locator.MAXTICKS = PLOT_CELLS_WIDTH * PLOT_CELLS_HEIGHT * 2
-    major_linewidth = (4 if (len(tilings) <= 500) else (1 if len(tilings) <= 5000 else 1/10))
+    major_linewidth = (4 if (len(tilings) <= 500) else (1 if len(tilings) <= 5000 else 1/6))
 
     if(len(tilings) <= 5000):
         ax.xaxis.set_minor_locator(AutoMinorLocator(WIDTH))
@@ -320,13 +321,13 @@ def plotAllTilings(tilings):
     plt.imshow(colors, interpolation='nearest')
     plt.tight_layout()
     # plt.title(f"{len(tilings)} Tilings of a {WIDTH} x {HEIGHT} Grid" ) #cut off
-    plt.savefig(f"tilings_{WIDTH}x{HEIGHT}.png", format = "png", dpi=800)
+    plt.savefig(f"tilings_{WIDTH}x{HEIGHT}_{len(tilings)}.png", format = "png", dpi=800)
 
 def run_everything():
     setupCalculationGlobals(givenWidth = WIDTH, givenHeight = HEIGHT)
     setupOutputGlobals(printIndividualTilings = PRINT_INDIVIDUAL_TILINGS, printFilterTest = PRINT_FILTER_TEST, printProgress = PRINT_PROGRESS)
     if(PRINT_FILTER_TEST):
-        filter_filename = f"filter_test_{WIDTH}x{HEIGHT}.txt"
+        filter_filename = f"filter_test_{WIDTH}x{HEIGHT}_{len(tilings)}.txt"
         filter_file = open(filter_filename, 'w')
     else:
         filter_file = None
@@ -351,9 +352,7 @@ if(__name__ == "__main__"):
     HEIGHT = 5
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
-    PRINT_PROGRESS = False             # Recommended for large grids
+    PRINT_PROGRESS = True             # Recommended for large grids
     SHOW_IMAGE = True                  # Not recommended for large grids (> 5x5)
     ###########################################################################
-
-    # run_everything()
-    plotTest(249651)
+    run_everything()

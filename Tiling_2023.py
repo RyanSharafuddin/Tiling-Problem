@@ -275,6 +275,16 @@ def printOutput(tilings):
         5) Print out the filtered tilings (perhaps with a note about which of the original tilings were eliminated and which they were symmetric to)
 """
 
+def rotcounterclockwise(symmetry_representation, num_times, height, width):
+    #num_times corresponds to how many 90 degree counterclockwise turns
+    new_symmetry_represntation = np.array(4, dtype=object)
+    #NOTE: l_tile_location_combo is a tuple
+    for (L_tile_type, l_tile_location_combo) in enumerate(symmetry_representation):
+        raise(Exception("Unimplemented"))
+        #TODO: given y,x of upper left square of an l tile of l_tile_type, calculate where the upper left square of the rotated result would be, given height and width
+        #
+    #NOTE: remember to sort the combo list by who is higher and then more to the left as a tiebreaker before returning it.
+
 def getTilingsFilteredForSymmetry(tilings):
     filtered_tiling_tuples = set()
     for tiling in tilings:

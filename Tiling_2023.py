@@ -310,6 +310,7 @@ def rotateComputerCoordsCCW(num_times, coord, height, width):
 
 def insertComboIntoNewSymmetryRepFor90DegRot(L_tile_type, L_tile_location_combo, num_times, new_symmetry_representation, height, width):
     #WARN: this function only handles 90 degree ccw rotations as of now. Change and then change name
+    # TODO: test that this works on tilings with multiple different kinds of tiles and at least 2 of the same kind
     if(num_times != 1):
         raise Exception("Unimplemented")
     new_top_left_locs = []

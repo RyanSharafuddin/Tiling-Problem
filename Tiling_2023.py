@@ -334,14 +334,6 @@ def getSymmetries(tiling):
 def tilingToTup(tiling):
     return(tuple(map(tuple, tiling)))
     
-if(__name__ == "__main__"):
-    ###########################   CONFIGURATION    ###########################
-    WIDTH = 4
-    HEIGHT = 4
-    PRINT_INDIVIDUAL_TILINGS = True
-    PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
-    PRINT_PROGRESS = False              # Recommended for large grids
-    ###########################################################################
 def plotTiling(coord, tiling, colors):
     for y in range(coord[0], coord[0] + HEIGHT):
         for x in range(coord[1], coord[1] + WIDTH):

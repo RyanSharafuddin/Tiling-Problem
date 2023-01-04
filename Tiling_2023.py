@@ -2,7 +2,7 @@
     According to https://www.numbersaplenty.com/2023, there are exactly 2023 ways to tile a 4x4 grid using only L tiles and monominos. It does not clarify if rotations or reflections count as different ways, or prove the statement. This Python program will attempt to verify it.
 """
 # Note: Profile by doing 'python -m cProfile -s tottime Tiling_2023.py'
-import numpy as np, itertools as it, bisect as b, copy, math, matplotlib.pyplot as plt
+import numpy as np, itertools as it, bisect as b, copy, math, matplotlib.pyplot as plt, matplotlib.ticker as mticker
 from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
 
 def setupCalculationGlobals(givenWidth, givenHeight):
@@ -252,60 +252,77 @@ def plotTiling(coord, tiling, colors):
 def plotAllTilings(tilings):
     global COLORS
 
-    COLORS = np.array([[125, 125, 125], [224, 130, 7], [48, 173, 10], [9, 17, 173], [173, 9, 159], [217, 11, 11], [21, 176, 155], [28, 74, 33], [172, 136, 191], [69, 5, 23]], dtype=int)
+    COLORS = np.array([
+        [125, 125, 125], 
+        [224, 130, 7], 
+        [48, 173, 10], 
+        [9, 17, 173], 
+        [173, 9, 159], 
+        [217, 11, 11], 
+        [21, 176, 155], 
+        [28, 74, 33], 
+        [172, 136, 191], 
+        [69, 5, 23]
+        ], dtype=int)
 
-    PLOT_CELLS_WIDTH = math.ceil(len(tilings) ** .5) * (WIDTH)   #NOTE
+    PLOT_CELLS_WIDTH = math.ceil(len(tilings) ** .5) * (WIDTH)
     PLOT_CELLS_HEIGHT = math.ceil(len(tilings) / math.ceil(len(tilings) ** .5)) * (HEIGHT) 
 
-    # print(f"PLOT_CELLS_HEIGHT: {PLOT_CELLS_HEIGHT}, PLOT_CELLS_WIDTH:  {PLOT_CELLS_WIDTH}")
+    print(f"PLOT_CELLS_HEIGHT: {PLOT_CELLS_HEIGHT}, PLOT_CELLS_WIDTH:  {PLOT_CELLS_WIDTH}")
     colors = np.ones((PLOT_CELLS_HEIGHT, PLOT_CELLS_WIDTH, 3), dtype=int) * 255
 
     tilings_in_column = len(colors) // (HEIGHT) 
     tilings_in_row = len(colors[0]) // (WIDTH)
 
-    # print(f"tilings_in_column: {tilings_in_column}, tilings_in_row:  {tilings_in_row}")
+    print(f"tilings_in_column: {tilings_in_column}, tilings_in_row:  {tilings_in_row}")
 
     for index, tiling in enumerate(tilings):
         upper_left_x = (index % tilings_in_row) * (WIDTH) 
         upper_left_y = (index // tilings_in_row) * (HEIGHT)
         # print(f"index: {index}, upper_left_x: {upper_left_x}, upper_left_y: {upper_left_y}")
         plotTiling([upper_left_y, upper_left_x], tiling, colors)
+    
+    if(len(tilings <= 5000)):
+        PLT_SIZE = 10
+        lw_ratio = .25
+    else:
+        PLT_SIZE = 20
+        lw_ratio = 0
 
-    PLT_SIZE = 10   #how big the display is
     fig = plt.figure()
     fig.set_figwidth(PLT_SIZE)
     fig.set_figheight(PLT_SIZE)
 
     ax = fig.gca()
-    #TODO: instead of using up a whole extra row/column for each tiling (the WIDTH and HEIGHT + 1), maybe use minor tick grid lines inside tilings, with low alpha in the grid, and major tick grid lines between tilings
     yticks = np.linspace(0, PLOT_CELLS_HEIGHT, tilings_in_column + 1) - .5
     xticks = np.linspace(0, PLOT_CELLS_WIDTH, tilings_in_row + 1) - .5
-    # print(f"yticks: {yticks}")
+    # print(f"major yticks: {yticks}")
+    # print(f"major xticks: {xticks}")
     ax.set_xticks(xticks)
     ax.set_yticks(yticks)
     # ax.minorticks_off()
-    ax.xaxis.set_minor_locator(AutoMinorLocator(WIDTH))
-    ax.yaxis.set_minor_locator(AutoMinorLocator(HEIGHT))
-    major_linewidth = (4 if (len(tilings) <= 500) else 1)
-    ax.grid(which='minor', color=(0,0,0,.2), linewidth=major_linewidth / 4)
+
+    mticker.Locator.MAXTICKS = PLOT_CELLS_WIDTH * PLOT_CELLS_HEIGHT * 2
+    major_linewidth = (4 if (len(tilings) <= 500) else (1 if len(tilings) <= 5000 else 1/10))
+
+    if(len(tilings) <= 5000):
+        ax.xaxis.set_minor_locator(AutoMinorLocator(WIDTH))
+        ax.yaxis.set_minor_locator(AutoMinorLocator(HEIGHT))
+        ax.grid(which='minor', color=(0,0,0,.2), linewidth= major_linewidth * lw_ratio)
+
+    ax.tick_params(which='both', width=0,length=0)
     ax.grid(which='major', color=(0,0,0,1), linewidth= major_linewidth) #Make the grid lines thinner if there are fewer tilings
     ax.axes.xaxis.set_ticklabels([])
     ax.axes.yaxis.set_ticklabels([])
+    for _, spine in ax.spines.items():
+        spine.set_visible(False)
 
     plt.imshow(colors, interpolation='nearest')
     plt.tight_layout()
     # plt.title(f"{len(tilings)} Tilings of a {WIDTH} x {HEIGHT} Grid" ) #cut off
     plt.savefig(f"tilings_{WIDTH}x{HEIGHT}.png", format = "png", dpi=800)
 
-if(__name__ == "__main__"):
-    ###########################   CONFIGURATION    ###########################
-    WIDTH = 4
-    HEIGHT = 4
-    PRINT_INDIVIDUAL_TILINGS = True
-    PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
-    PRINT_PROGRESS = False              # Recommended for large grids
-    SHOW_IMAGE = True                   # Not recommended for larger than 4x4
-    ###########################################################################
+def run_everything():
     setupCalculationGlobals(givenWidth = WIDTH, givenHeight = HEIGHT)
     setupOutputGlobals(printIndividualTilings = PRINT_INDIVIDUAL_TILINGS, printFilterTest = PRINT_FILTER_TEST, printProgress = PRINT_PROGRESS)
     if(PRINT_FILTER_TEST):
@@ -324,3 +341,19 @@ if(__name__ == "__main__"):
         plotAllTilings(tilings)
         print("Finished creating image.")
 
+def plotTest(num_tilings):
+    tilings = np.random.random_integers(0, 7, size=(num_tilings, HEIGHT, WIDTH))
+    plotAllTilings(tilings)
+
+if(__name__ == "__main__"):
+    ###########################   CONFIGURATION    ############################
+    WIDTH = 5
+    HEIGHT = 5
+    PRINT_INDIVIDUAL_TILINGS = True
+    PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
+    PRINT_PROGRESS = False             # Recommended for large grids
+    SHOW_IMAGE = True                  # Not recommended for large grids (> 5x5)
+    ###########################################################################
+
+    # run_everything()
+    plotTest(249651)

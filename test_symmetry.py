@@ -70,18 +70,17 @@ class TestSymmetry:
 
             this takes care of testing list sorting.
         """
-        tiling_2017, sym_rep_2017 = tilings[2017], symmetry_representations[2017]
+        sym_rep_2017 = symmetry_representations[2017]
 
-        tiling_2016, sym_rep_2016 = tilings[2016], symmetry_representations[2016]
+        sym_rep_2016 = symmetry_representations[2016]
 
-        tiling_2015, sym_rep_2015 = tilings[2015], symmetry_representations[2015]
+        sym_rep_2015 = symmetry_representations[2015]
 
-        tiling_2010, sym_rep_2010 = tilings[2010], symmetry_representations[2010]
+        sym_rep_2010 = symmetry_representations[2010]
 
         assert(rotSymRepCounterclockwise(sym_rep_2017, 1, HEIGHT, WIDTH) == sym_rep_2016)
 
-        twice_rotated = rotSymRepCounterclockwise(sym_rep_2017, 2, HEIGHT, WIDTH)
-        assert(twice_rotated == sym_rep_2015)
+        assert(rotSymRepCounterclockwise(sym_rep_2017, 2, HEIGHT, WIDTH) == sym_rep_2015)
 
         assert(rotSymRepCounterclockwise(sym_rep_2017, 3, HEIGHT, WIDTH) == sym_rep_2010)
 
@@ -91,6 +90,24 @@ class TestSymmetry:
 
         assert(indirect_thrice == direct_thrice)
 
+        """
+        75:
+       [[0 0 0 2]
+        [1 1 2 2]
+        [0 1 0 0]
+        [0 0 0 0]]
+
+        (((1, 0),), ((0, 3),), (), ())
+
+        149:
+       [[1 1 0 0]
+        [0 1 0 0]
+        [0 2 2 0]
+        [0 2 0 0]]
+
+        (((0, 0),), (), (), ((2, 1),))
+        """
+        assert(rotSymRepCounterclockwise(symmetry_representations[74], 1, HEIGHT, WIDTH) == symmetry_representations[148])
 
         #TODO: also test a rotation with 2 L tiles, one CCW equivalence between the sym reps, then test that calling rotSymRepCounterclockwise with num_times = 1 3 times is same as calling it once with num_times = 3. 
     

@@ -29,12 +29,56 @@ class TestSymmetry:
         PRINT_PROGRESS = False              # Recommended for large grids
         SHOW_IMAGE = False                  # Not recommended for large grids (> 5x5)
         tilings, symmetry_representations = run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE)
-        tiling, sym_rep = tilings[2], symmetry_representations[2]
-        print(f"tiling:\n {tiling}\n")
-        print(f"corresponding sym_rep:\n {sym_rep}")
+        """
+            2018: (2017 0 indexed). Has all 4 tilings and 2 of type 3
+           [[4 4 1 1]
+            [4 5 5 1]
+            [3 5 0 2]
+            [3 3 2 2]]
 
-        print(f"rotated 90 degrees ccw: \n{np.rot90(tiling, 1)}\n")
-        print(f"rotate its sym_rep: \n{rotSymRepCounterclockwise(sym_rep, num_times=1, height=HEIGHT, width=WIDTH)}")
+            (((0, 2),), ((2, 3),), ((2, 0),), ((0, 0), (1, 1)))
+
+            Visual inspection of image file shows that when rotated once, it turns into:
+
+            2017: (2016 0 indexed)
+           [[5 5 1 1]
+            [5 3 0 1]
+            [4 3 3 2]
+            [4 4 2 2]]
+
+            (((0, 2),), ((2, 3),), ((1, 1), (2, 0)), ((0, 0),))
+
+            Rotated twice:
+
+            2016: (2015 0 indexed)
+           [[5 5 1 1]
+            [5 0 2 1]
+            [4 2 2 3]
+            [4 4 3 3]]
+
+            (((0, 2),), ((1, 2), (2, 3)), ((2, 0),), ((0, 0),))
+
+            thrice
+
+            2011: (2010 0 indexed)
+            [[5 5 1 1]
+            [5 2 2 1]
+            [4 0 2 3]
+            [4 4 3 3]]
+
+            (((0, 2), (1, 1)), ((2, 3),), ((2, 0),), ((0, 0),))
+
+            this takes care of testing list sorting.
+        """
+        tiling_2017, sym_rep_2017 = tilings[2017], symmetry_representations[2017]
+
+        tiling_2016, sym_rep_2016 = tilings[2016], symmetry_representations[2016]
+
+        tiling_2015, sym_rep_2015 = tilings[2015], symmetry_representations[2015]
+
+        tiling_2010, sym_rep_2010 = tilings[2010], symmetry_representations[2010]
+
+        #TODO: also test a rotation with 2 L tiles, one CCW equivalence between the sym reps, then test that calling rotSymRepCounterclockwise with num_times = 1 3 times is same as calling it once with num_times = 3. 
     
     def test_reflect_sym_rep(self):
         raise Exception("Unimplemented")

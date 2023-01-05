@@ -288,6 +288,7 @@ def printOutput(tilings):
 def rotateComputerCoordsCCW(num_times, coord, height, width):
     """
         given a coords array in form [y,x], returns new coords which are these rotated 90 degrees counterclockwise num_times. In form [y,x]
+        NOTE: only call with num_times from 1 to 3 inclusive
     """
     #given y,x of upper left square of an L tile of L_tile_type, calculate where the upper left square of the rotated result would be, given height and width
     #   With real coords, a 90 degree counter clockwise rotation centered at origin does this:
@@ -309,29 +310,35 @@ def rotateComputerCoordsCCW(num_times, coord, height, width):
     #                V
     # computer coords transformed: (computerY - (height - 1)/2 + (width - 1)/2,
     #                                -computerX + (width - 1)/2 + (height - 1)/2)
-    if(num_times != 1):
-        raise Exception("Unimplemented") #TODO
     computerY, computerX = coord
-    transformed_computerX = int(computerY - (height - 1)/2 + (width -1)/2)
-    transformed_computerY = int(-1*computerX + (width - 1)/2 + (height - 1)/2)
+    if(num_times == 1):
+        transformed_computerX = int(computerY - (height - 1)/2 + (width -1)/2)
+        transformed_computerY = int(-1*computerX + (width - 1)/2 + (height - 1)/2)
+    elif(num_times == 2):
+        transformed_computerX = -1*computerX + (width - 1)
+        transformed_computerY = -1*computerY + (height - 1)
+    elif(num_times == 3):
+        transformed_computerX = int(-1*computerY + (height - 1)/2 + (width - 1)/2)
+        transformed_computerY = int(computerX - (width - 1)/2 + (height - 1)/2)
     return((transformed_computerY, transformed_computerX)) 
 
-def insertComboIntoNewSymmetryRepFor90DegRot(L_tile_type, L_tile_location_combo, num_times, new_symmetry_representation, height, width):
+def insertComboIntoNewSymmetryRepForRotation(L_tile_type, L_tile_location_combo, num_times, new_symmetry_representation, height, width):
     #WARN: this function only handles 90 degree ccw rotations as of now. Change and then change name
     # TODO: test that this works on tilings with multiple different kinds of tiles and at least 2 of the same kind
-    if(num_times != 1):
-        raise Exception("Unimplemented")
     new_top_left_locs = []
-    offset_indexes = (0, None, 1, 1) #WARN be careful when rotating multiple times
+    # offset_indexes = (0, None, 1, 1) #WARN be careful when rotating multiple times
+    # offset_indexes_2 = (1, 1, 1, 0)
+    # offset_indexes_3 = (None, 0, 0, 0)
+    offset_indexes = ((0, None, 1, 1), (1, 1, 1, 0), (None, 0, 0, 0))
     for L_tile_location in L_tile_location_combo:
-        offset_index = offset_indexes[L_tile_type] #WARN be careful when rotating multiple times
+        offset_index = offset_indexes[num_times - 1][L_tile_type] #WARN be careful when rotating multiple times
         future_identifier_loc = L_tile_location if(offset_index is None) else (np.add(L_tile_location, L_TILE_OFFSETS[L_tile_type][offset_index]))
         # if(L_tile_type == 0): #top right corner
         #     future_identifer_loc = np.add(L_tile_location, L_TILE_OFFSETS[0][0]) # the current location of the square in the corner, the top right, which for type 0 L tiles, will be top left corner after 90 degree counter clockwise rotation
         # elif(L_tile_type == 1): #bottom right
         #     future_identifer_loc = L_tile_location # bottom rights become top left. Top left square becomes new top left square
         # else:
-        new_top_left_loc = rotateComputerCoordsCCW(1, future_identifier_loc, height, width)
+        new_top_left_loc = rotateComputerCoordsCCW(num_times, future_identifier_loc, height, width)
         new_top_left_locs.append(new_top_left_loc)
 
     new_top_left_locs.sort() #TODO test that this sort actually works
@@ -345,7 +352,7 @@ def rotSymRepCounterclockwise(symmetry_representation, num_times, height, width)
     new_symmetry_representation = [(), (), (), ()]
     #NOTE: L_tile_location_combo is a tuple
     for (L_tile_type, L_tile_location_combo) in enumerate(symmetry_representation):
-        insertComboIntoNewSymmetryRepFor90DegRot(L_tile_type, L_tile_location_combo, num_times, new_symmetry_representation, height, width)
+        insertComboIntoNewSymmetryRepForRotation(L_tile_type, L_tile_location_combo, num_times, new_symmetry_representation, height, width)
     return(tuple(new_symmetry_representation))
         # An L tile of type 0 (top right corner) becomes a type 3 L tile (top left). 
         # The square at its first offset (the corner square, offset [0,1] from top left), becomes its new top left.
@@ -398,8 +405,8 @@ def getSymmetries(symmetry_representation):
     #     #np.rot90 rotates counterclockwise
         # rot90 = np.rot90(tiling, 1)
         rot90 = rotSymRepCounterclockwise(symmetry_representation, 1, HEIGHT, WIDTH)
-    #     rot180 = np.rot90(tiling, 2)
-    #     rot270 = np.rot90(tiling, 3)
+        rot180 = rotSymRepCounterclockwise(symmetry_representation, 2, HEIGHT, WIDTH)
+        rot270 = rotSymRepCounterclockwise(symmetry_representation, 3, HEIGHT, WIDTH)
 
     #     #reflect horizontal means across horizontal axis
     #     rot0_reflect_horizontal = np.flip(rot0, 0)
@@ -408,7 +415,7 @@ def getSymmetries(symmetry_representation):
     #     rot270_reflect_horizontal = np.flip(rot270, 0)
         
     #     symmetries_list = [rot0, rot90, rot180, rot270, rot0_reflect_horizontal, rot90_reflect_horizontal, rot180_reflect_horizontal, rot270_reflect_horizontal]
-    symmetriesSet.update([rot0, rot90])
+    symmetriesSet.update([rot0, rot90, rot180, rot270])
 
     # else:
     #     #rectangle, 4 symmetries
@@ -541,6 +548,6 @@ if(__name__ == "__main__"):
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
     PRINT_PROGRESS = False              # Recommended for large grids
-    SHOW_IMAGE = False                  # Not recommended for large grids (> 5x5)
+    SHOW_IMAGE = True                  # Not recommended for large grids (> 5x5)
     ###########################################################################
     run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE)

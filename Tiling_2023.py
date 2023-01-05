@@ -233,16 +233,15 @@ def getAllTilings(filter_file):
 
 def printOutput(tilings):
     """
-        If PRINT_INDIVIDUAL_TILINGS is True, will print all tilings as well as how many there are, otherwise only prints number of tilings.
-        Prints output to a file called tilings_{WIDTH}x{HEIGHT}.txt
+        If PRINT_INDIVIDUAL_TILINGS is True, prints output to a file called tilings_{WIDTH}x{HEIGHT}.txt. Output is all tilings as well as 2 summary sentences of the rectangle size and number of tilings.
     """
-    tilings_filename = f"tilings_{WIDTH}x{HEIGHT}_{len(tilings)}.txt"
-    with open(tilings_filename, 'w') as f:
-        if(PRINT_INDIVIDUAL_TILINGS): 
+    if(PRINT_INDIVIDUAL_TILINGS): 
+        tilings_filename = f"tilings_{WIDTH}x{HEIGHT}_{len(tilings)}.txt"
+        with open(tilings_filename, 'w') as f:
             for index, tiling in enumerate(tilings):
                 print(f"{index + 1}:\n{tiling}\n", file = f)
-        print(f"For {WIDTH} x {HEIGHT} rectangles:", file = f)
-        print(f"The number of tilings is: {len(tilings)}", file = f)
+            print(f"For {WIDTH} x {HEIGHT} rectangles:", file = f)
+            print(f"The number of tilings is: {len(tilings)}", file = f)
 
 def plotTiling(coord, tiling, colors):
     for y in range(coord[0], coord[0] + HEIGHT):
@@ -344,9 +343,9 @@ if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
     WIDTH = 3
     HEIGHT = 3
-    PRINT_INDIVIDUAL_TILINGS = True
-    PRINT_FILTER_TEST = True          # Not recommended for large grids (> 5x5)
-    PRINT_PROGRESS = True              # Recommended for large grids
-    SHOW_IMAGE = True                  # Not recommended for large grids (> 5x5)
+    PRINT_INDIVIDUAL_TILINGS = False
+    PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
+    PRINT_PROGRESS = False              # Recommended for large grids
+    SHOW_IMAGE = False                  # Not recommended for large grids (> 5x5)
     ###########################################################################
     run_everything()

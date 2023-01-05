@@ -21,11 +21,11 @@ from Tiling_2023 import *
 class TestSymmetry:
 
     def test_rotate_sym_rep(self):
-        #TODO: fill in with expected values from a tiling that contains all 4 types of L tiles and at least 2 of 1 type and try all 8 symmetries on it. Ditto for a rectangle with all 4 symmetries.
-        WIDTH = 3
-        HEIGHT = 3
-        PRINT_INDIVIDUAL_TILINGS = True
-        PRINT_FILTER_TEST = True          # Not recommended for large grids (> 5x5)
+        #TODO: fill in with expected values from a tiling that contains all 4 types of L tiles and at least 2 of 1 type and try all 8 symmetries on it. And see that the list remains sorted. Ditto for a rectangle with all 4 symmetries.
+        WIDTH = 4
+        HEIGHT = 4
+        PRINT_INDIVIDUAL_TILINGS = False
+        PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
         PRINT_PROGRESS = False              # Recommended for large grids
         SHOW_IMAGE = False                  # Not recommended for large grids (> 5x5)
         tilings, symmetry_representations = run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE)
@@ -34,7 +34,10 @@ class TestSymmetry:
         print(f"corresponding sym_rep:\n {sym_rep}")
 
         print(f"rotated 90 degrees ccw: \n{np.rot90(tiling, 1)}\n")
-        print(f"rotate its sym_rep: \n{rotSymRepCounterclockwise(sym_rep, 1, 3, 3)}")
+        print(f"rotate its sym_rep: \n{rotSymRepCounterclockwise(sym_rep, num_times=1, height=HEIGHT, width=WIDTH)}")
+    
+    def test_reflect_sym_rep(self):
+        raise Exception("Unimplemented")
 
     def testGetSymmetries(self):
         #TODO: test that the getSymmetries function returns 1 thing for empty tiling, 4 things for corner tiling, and expected 8 things as in above
@@ -42,11 +45,10 @@ class TestSymmetry:
 
     #Fails because not all symmetries are implemented yet
     def test_symmetry(self):
-        print("In test_symmetry")
         WIDTH = 3
         HEIGHT = 3
-        PRINT_INDIVIDUAL_TILINGS = True
-        PRINT_FILTER_TEST = True          # Not recommended for large grids (> 5x5)
+        PRINT_INDIVIDUAL_TILINGS = False
+        PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
         PRINT_PROGRESS = False              # Recommended for large grids
         SHOW_IMAGE = False                  # Not recommended for large grids (> 5x5)
         tilings, symmetry_representations = run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE)

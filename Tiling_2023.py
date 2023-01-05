@@ -241,14 +241,14 @@ def printOutput(tilings):
         If PRINT_INDIVIDUAL_TILINGS is True, will print all tilings as well as how many there are, otherwise only prints number of tilings.
         Prints output to a file called tilings_{WIDTH}x{HEIGHT}.txt
     """
-    tilings_filename = f"tilings_{WIDTH}x{HEIGHT}_{len(tilings)}.txt"
-    with open(tilings_filename, 'w') as f:
-        if(PRINT_INDIVIDUAL_TILINGS): 
+    if(PRINT_INDIVIDUAL_TILINGS): 
+        tilings_filename = f"tilings_{WIDTH}x{HEIGHT}_{len(tilings)}.txt"
+        with open(tilings_filename, 'w') as f:
             for index, tiling in enumerate(tilings):
                 print(f"{index + 1}:\n{tiling}\n", file = f)
                 print(f"{symmetry_representation[index]}\n", file = f)
-        print(f"For {WIDTH} x {HEIGHT} rectangles:", file = f)
-        print(f"The number of tilings is: {len(tilings)}", file = f)
+            print(f"For {WIDTH} x {HEIGHT} rectangles:", file = f)
+            print(f"The number of tilings is: {len(tilings)}", file = f)
 
 """
     WARN: 
@@ -276,7 +276,8 @@ def printOutput(tilings):
         4) Test both functions as listed in test_symmetry.py.
         5) Modify below 2 symmetry functions to use this representation.
         6) testGetSymmetries.
-        7) Change getTilingsFilteredBySymmetry to print out text that says which of the original tilings are symmetrical to which earlier tiling, and also print/plot the tilings filtered by symmetry and all the original tilings but reordered so that symmetrical tilings are next to each other.
+        7) Change getTilingsFilteredBySymmetry to give all tilings ordered by symmetry as well as only symmetrically unique tilings, and configure printing/plotting for those. For testing purposes, print out text that says which of the original tilings are symmetrical to which earlier tiling.
+        8) Stop printing the symmetry_representation in the tilings*.txt file once no longer needed for testing.
     NOTE:
         Optional Optimizations:
             1) Instead of making each coord in LOCATIONS an np.array[y, x], make each   coord a tuple (y, x), since you're not mutating the coords, and then go to each place the coords are used and remove calls to the tuple() function (particularly in attemptToAddL_Tile) to speed things up.
@@ -334,13 +335,8 @@ def insertComboIntoNewSymmetryRepFor90DegRot(L_tile_type, L_tile_location_combo,
         new_top_left_locs.append(new_top_left_loc)
 
     new_top_left_locs.sort() #TODO test that this sort actually works
-    for i in range(0, 4): #TODO change once implement rotating multiple times, since this is only valid for rotating once
-        if(L_tile_type == i):
-            new_symmetry_representation[(i - 1) % 4] = tuple(new_top_left_locs) #since L_TILE_OFFSETS are listed in rotating clockwise order
-    # if(L_tile_type == 0): #top right corner
-    #     new_symmetry_representation[3] = tuple(new_top_left_locs) #top right becomes bottom left with one rotation ccw
-    # elif(L_tile_type == 1):
-    #     new_symmetry_representation[0] = tuple(new_top_left_locs)
+    #Below line represents the fact that an L_tile of type i becomes an L_tile of type i - num_times rotated when rotated ccw num_times.
+    new_symmetry_representation[(L_tile_type - 1) % 4] = tuple(new_top_left_locs) #TODO WARN change once implement rotating multiple times, since this is only valid for rotating once. Change the  L_tile_type - 1 to L_tile_type - num_times.
 
 
 def rotSymRepCounterclockwise(symmetry_representation, num_times, height, width):
@@ -542,7 +538,7 @@ if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
     WIDTH = 4
     HEIGHT = 4
-    PRINT_INDIVIDUAL_TILINGS = False
+    PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
     PRINT_PROGRESS = False              # Recommended for large grids
     SHOW_IMAGE = False                  # Not recommended for large grids (> 5x5)

@@ -323,28 +323,16 @@ def rotateComputerCoordsCCW(num_times, coord, height, width):
     return((transformed_computerY, transformed_computerX)) 
 
 def insertComboIntoNewSymmetryRepForRotation(L_tile_type, L_tile_location_combo, num_times, new_symmetry_representation, height, width):
-    #WARN: this function only handles 90 degree ccw rotations as of now. Change and then change name
-    # TODO: test that this works on tilings with multiple different kinds of tiles and at least 2 of the same kind
     new_top_left_locs = []
-    # offset_indexes = (0, None, 1, 1) #WARN be careful when rotating multiple times
-    # offset_indexes_2 = (1, 1, 1, 0)
-    # offset_indexes_3 = (None, 0, 0, 0)
     offset_indexes = ((0, None, 1, 1), (1, 1, 1, 0), (None, 0, 0, 0))
     for L_tile_location in L_tile_location_combo:
-        offset_index = offset_indexes[num_times - 1][L_tile_type] #WARN be careful when rotating multiple times
+        offset_index = offset_indexes[num_times - 1][L_tile_type] 
         future_identifier_loc = L_tile_location if(offset_index is None) else (np.add(L_tile_location, L_TILE_OFFSETS[L_tile_type][offset_index]))
-        # if(L_tile_type == 0): #top right corner
-        #     future_identifer_loc = np.add(L_tile_location, L_TILE_OFFSETS[0][0]) # the current location of the square in the corner, the top right, which for type 0 L tiles, will be top left corner after 90 degree counter clockwise rotation
-        # elif(L_tile_type == 1): #bottom right
-        #     future_identifer_loc = L_tile_location # bottom rights become top left. Top left square becomes new top left square
-        # else:
         new_top_left_loc = rotateComputerCoordsCCW(num_times, future_identifier_loc, height, width)
         new_top_left_locs.append(new_top_left_loc)
 
-    new_top_left_locs.sort() #TODO test that this sort actually works
-    #Below line represents the fact that an L_tile of type i becomes an L_tile of type i - num_times rotated when rotated ccw num_times.
-    new_symmetry_representation[(L_tile_type - 1) % 4] = tuple(new_top_left_locs) #TODO WARN change once implement rotating multiple times, since this is only valid for rotating once. Change the  L_tile_type - 1 to L_tile_type - num_times.
-
+    new_top_left_locs.sort()
+    new_symmetry_representation[(L_tile_type - num_times) % 4] = tuple(new_top_left_locs)
 
 def rotSymRepCounterclockwise(symmetry_representation, num_times, height, width):
     #NOTE: returns a new sym rep; does not mutate old one
@@ -354,8 +342,6 @@ def rotSymRepCounterclockwise(symmetry_representation, num_times, height, width)
     for (L_tile_type, L_tile_location_combo) in enumerate(symmetry_representation):
         insertComboIntoNewSymmetryRepForRotation(L_tile_type, L_tile_location_combo, num_times, new_symmetry_representation, height, width)
     return(tuple(new_symmetry_representation))
-        # An L tile of type 0 (top right corner) becomes a type 3 L tile (top left). 
-        # The square at its first offset (the corner square, offset [0,1] from top left), becomes its new top left.
 
 def getTilingsFilteredForSymmetry(tilings_container):
     # print(f"tilings_container: \n{tilings_container}")

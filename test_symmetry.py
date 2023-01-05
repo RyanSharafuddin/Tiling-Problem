@@ -78,6 +78,20 @@ class TestSymmetry:
 
         tiling_2010, sym_rep_2010 = tilings[2010], symmetry_representations[2010]
 
+        assert(rotSymRepCounterclockwise(sym_rep_2017, 1, HEIGHT, WIDTH) == sym_rep_2016)
+
+        twice_rotated = rotSymRepCounterclockwise(sym_rep_2017, 2, HEIGHT, WIDTH)
+        assert(twice_rotated == sym_rep_2015)
+
+        assert(rotSymRepCounterclockwise(sym_rep_2017, 3, HEIGHT, WIDTH) == sym_rep_2010)
+
+        direct_thrice = rotSymRepCounterclockwise(sym_rep_2017, 3, HEIGHT, WIDTH)
+
+        indirect_thrice = rotSymRepCounterclockwise(rotSymRepCounterclockwise(rotSymRepCounterclockwise(sym_rep_2017, 1, HEIGHT, WIDTH), 1, HEIGHT, WIDTH), 1, HEIGHT, WIDTH)
+
+        assert(indirect_thrice == direct_thrice)
+
+
         #TODO: also test a rotation with 2 L tiles, one CCW equivalence between the sym reps, then test that calling rotSymRepCounterclockwise with num_times = 1 3 times is same as calling it once with num_times = 3. 
     
     def test_reflect_sym_rep(self):

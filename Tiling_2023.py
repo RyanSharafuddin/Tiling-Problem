@@ -279,7 +279,9 @@ def printOutput(tilings):
         7) Change getTilingsFilteredBySymmetry to print out text that says which of the original tilings are symmetrical to which earlier tiling, and also print/plot the tilings filtered by symmetry and all the original tilings but reordered so that symmetrical tilings are next to each other.
     NOTE:
         Optional Optimizations:
-            Instead of making each coord in LOCATIONS an np.array[y, x], make each coord a tuple (y, x), since you're not mutating the coords, and then go to each place the coords are used and remove calls to the tuple() function (particularly in attemptToAddL_Tile) to speed things up.
+            1) Instead of making each coord in LOCATIONS an np.array[y, x], make each   coord a tuple (y, x), since you're not mutating the coords, and then go to each place the coords are used and remove calls to the tuple() function (particularly in attemptToAddL_Tile) to speed things up.
+            
+            2) Make a function called reflectAndRotate for the 4 symmetries that involve reflection and rotation, profile to see how long it takes, and then do reflection/rotation all in one function if that takes too long.
 """
 
 def rotateComputerCoordsCCW(num_times, coord, height, width):
@@ -374,7 +376,25 @@ def getTilingsFilteredForSymmetry(tilings_container):
 #     new_sym_rep = ((tuple), (), (), ())
 
 def getSymmetries(symmetry_representation):
-    #NOTE: need to change to work with other representation in plan
+
+    #NOTE: Prove that there are 8 symmetries in a square:
+    #      A symmetry leaves distances unchanged, so if vertices 1 and 2 are diagonal
+    #      from each other before, they will be diagonal afterwards. Therefore, a 
+    #      square has 8 symmetries, the ones below. 1 and 3 are diagonal, and so 
+    #      are 2 and 4. The 1 3 can be in any of 4 orientations, and for each 1 3 
+    #      orientation, 2 and 4 can be in two orientations.
+    #      Same for rectangle, except ignore the 4 symmetries that turn rectangle
+    #      sideways.
+    """
+        ccw0    ccw1    ccw2    ccw3
+        12      23      34      41
+        43      14      21      32
+
+        14      43      32      21
+        23      12      41      34
+     ccw3,vf ccw2,vf  ccw1,vf   vf
+    """
+
     symmetriesSet = set()
     if(HEIGHT == WIDTH):
         #square, 8 symmetries

@@ -3,7 +3,7 @@
 """
 # Note: Profile by doing 'python -m cProfile -s tottime Tiling_2023.py'
 import numpy as np, itertools as it, bisect as b, copy, math, matplotlib.pyplot as plt, matplotlib.ticker as mticker
-from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
+from matplotlib.ticker import AutoMinorLocator
 
 def setupCalculationGlobals(givenWidth, givenHeight):
     global WIDTH,  HEIGHT,  TOTAL,  MAX_POSSIBLE_L_TILES,  L_TILES,  LOCATIONS,  L_TILE_OFFSETS
@@ -271,10 +271,15 @@ def printOutput(tilings):
         1) Modify loop_rec to attach the needed information to make new_tilings = [original_tilings, new_info_list], and modify printing to print it out with the original tilings.: DONE
 
         2) Make a function that rotates this representation 90 degrees counterclockwise.
-            CURRENT PROGRESS: on the rotates function, only handles some cases so far: Test it on tilings with multiple tiles of different types.
+            CURRENT PROGRESS: on the rotates function, only handles some cases so far.
         3) Make a function that reflects this representation horizontally.
-        4) Modify below 2 symmetry functions to use this representation.
-        5) Print out the filtered tilings (perhaps with a note about which of the original tilings were eliminated and which they were symmetric to)
+        4) Test both functions as listed in test_symmetry.py.
+        5) Modify below 2 symmetry functions to use this representation.
+        6) testGetSymmetries.
+        7) Change getTilingsFilteredBySymmetry to print out text that says which of the original tilings are symmetrical to which earlier tiling, and also print/plot the tilings filtered by symmetry and all the original tilings but reordered so that symmetrical tilings are next to each other.
+    NOTE:
+        Optional Optimizations:
+            Instead of making each coord in LOCATIONS an np.array[y, x], make each coord a tuple (y, x), since you're not mutating the coords, and then go to each place the coords are used and remove calls to the tuple() function (particularly in attemptToAddL_Tile) to speed things up.
 """
 
 def rotateComputerCoordsCCW(num_times, coord, height, width):
@@ -489,7 +494,7 @@ def plotAllTilings(tilings):
     # plt.title(f"{len(tilings)} Tilings of a {WIDTH} x {HEIGHT} Grid" ) #cut off
     plt.savefig(f"tilings_{WIDTH}x{HEIGHT}_{len(tilings)}.png", format = "png", dpi=800)
 
-def run_everything():
+def run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE):
     setupCalculationGlobals(givenWidth = WIDTH, givenHeight = HEIGHT)
     setupOutputGlobals(printIndividualTilings = PRINT_INDIVIDUAL_TILINGS, printFilterTest = PRINT_FILTER_TEST, printProgress = PRINT_PROGRESS)
     if(PRINT_FILTER_TEST):
@@ -517,12 +522,9 @@ if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
     WIDTH = 4
     HEIGHT = 4
-    PRINT_INDIVIDUAL_TILINGS = True
+    PRINT_INDIVIDUAL_TILINGS = False
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
     PRINT_PROGRESS = False              # Recommended for large grids
-    SHOW_IMAGE = True                  # Not recommended for large grids (> 5x5)
+    SHOW_IMAGE = False                  # Not recommended for large grids (> 5x5)
     ###########################################################################
-    run_everything()
-else:
-    # This is being imported into the test file
-    from globals import *
+    run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE)

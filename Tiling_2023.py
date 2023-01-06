@@ -370,6 +370,7 @@ def getTilingsFilteredForSymmetry(tilings_container):
                 tilings_ordered_by_symmetry_lol[index_tuple[1]].append(original_tilings[original_tiling_index])
                 break
         if(not(duplicate)):
+            filtered_tiling_symmetry_representations[symmetry_representation] = (original_tiling_index, len(tilings_ordered_by_symmetry_lol))
             original_tiling_sym_indexes[original_tiling_index] = -1
             tilings_ordered_by_symmetry_lol.append([original_tilings[original_tiling_index]])
     return((tilings_ordered_by_symmetry_lol, original_tiling_sym_indexes))

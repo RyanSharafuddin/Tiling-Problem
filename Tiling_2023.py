@@ -3,7 +3,7 @@
 """
 # Note: Profile by doing 'python -m cProfile -s tottime Tiling_2023.py'
 import numpy as np, itertools as it, bisect as b, copy, math, matplotlib.pyplot as plt, matplotlib.ticker as mticker
-from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
+from matplotlib.ticker import AutoMinorLocator
 
 def setupCalculationGlobals(givenWidth, givenHeight):
     global WIDTH,  HEIGHT,  TOTAL,  MAX_POSSIBLE_L_TILES,  L_TILES,  LOCATIONS,  L_TILE_OFFSETS
@@ -200,9 +200,8 @@ def attemptToAddCombo(tiling, L_tile_type, combo, start_label):
     if(didFail):
         for j in range(0, undoLimit):
             removeL_Tile(tiling, L_tile_type, combo[j])
-        return(False)
     #did not fail
-    return(True)
+    return(not(didFail))
 
 def removeCombo(tiling, L_tile_type, combo):
     """
@@ -341,7 +340,7 @@ def plotTest(num_tilings):
 
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
-    WIDTH = 3
+    WIDTH = 4
     HEIGHT = 3
     PRINT_INDIVIDUAL_TILINGS = False
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)

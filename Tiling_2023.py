@@ -467,6 +467,29 @@ def insertTilingInColors(coord, tiling, colors):
         for x in range(coord[1], coord[1] + WIDTH):
             colors[y, x] = COLORS[ tiling[(y-coord[0], x-coord[1])] ]
 
+def computeSymmetryPlotParams(symmetry_lol):
+    tilings_in_row = max(map(lambda l: len(l), symmetry_lol))
+    PLOT_CELLS_WIDTH = WIDTH * tilings_in_row
+    tilings_in_column = len(symmetry_lol)
+    PLOT_CELLS_HEIGHT = tilings_in_column * HEIGHT
+    colors = np.ones((PLOT_CELLS_HEIGHT, PLOT_CELLS_WIDTH, 3), dtype=int) * 255
+    for sym_index, sym_group in enumerate(symmetry_lol):
+        for tiling_index, tiling in enumerate(sym_group):
+            upper_left_x = tiling_index * WIDTH
+            upper_left_y = sym_index * HEIGHT
+            insertTilingInColors([upper_left_y, upper_left_x], tiling, colors)
+    if(PLOT_CELLS_HEIGHT <= 285):
+        PLT_SIZE = 10
+        lw_ratio = .25
+    else:
+        PLT_SIZE = 20
+        lw_ratio = .5
+    yticks = np.linspace(0, PLOT_CELLS_HEIGHT, tilings_in_column + 1) - .5
+    xticks = np.linspace(0, PLOT_CELLS_WIDTH, tilings_in_row + 1) - .5
+    mticker.Locator.MAXTICKS = PLOT_CELLS_WIDTH * PLOT_CELLS_HEIGHT * 2
+    major_linewidth = (4 if (PLOT_CELLS_HEIGHT <= 92) else (1 if PLOT_CELLS_HEIGHT <= 285 else 1/6))
+    return((colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth))
+
 def computePlotParams(tilings):
     PLOT_CELLS_WIDTH = math.ceil(len(tilings) ** .5) * (WIDTH)
     PLOT_CELLS_HEIGHT = math.ceil(len(tilings) / math.ceil(len(tilings) ** .5)) * (HEIGHT) 
@@ -489,8 +512,8 @@ def computePlotParams(tilings):
     major_linewidth = (4 if (len(tilings) <= 500) else (1 if len(tilings) <= 5000 else 1/6))
     return((colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth))
 
-def plotTilings(tilings, plot_name):
-    (colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth) = computePlotParams(tilings)
+def plotTilings(tilings, plot_name, plotting_sym_groups):
+    (colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth) = computeSymmetryPlotParams(tilings) if (plotting_sym_groups) else computePlotParams(tilings)
     fig = plt.figure()
     fig.set_figwidth(PLT_SIZE)
     fig.set_figheight(PLT_SIZE)
@@ -514,18 +537,19 @@ def plotTilings(tilings, plot_name):
     plt.savefig(plot_name, format = "png", dpi=800)
 
 def plotAllTilings(tilings, tilings_ordered_by_symmetry_lol):
-    plotTilings(tilings, f"tilings_original_{WIDTH}x{HEIGHT}_{len(tilings)}.png")
-    plotTilings(list(map(lambda l: l[0], tilings_ordered_by_symmetry_lol)), f"tilings_symmetrically_unique_{WIDTH}x{HEIGHT}_{len(tilings_ordered_by_symmetry_lol)}.png")
+    plotTilings(tilings, f"tilings_original_{WIDTH}x{HEIGHT}_{len(tilings)}.png", False)
+    plotTilings(list(map(lambda l: l[0], tilings_ordered_by_symmetry_lol)), f"tilings_symmetrically_unique_{WIDTH}x{HEIGHT}_{len(tilings_ordered_by_symmetry_lol)}.png", False)
 
-    flat_symmetrically_ordered_list = np.empty(lenLol(tilings_ordered_by_symmetry_lol), dtype=object)
+    plotTilings(tilings_ordered_by_symmetry_lol, f"tilings_symetrically_ordered_{WIDTH}x{HEIGHT}_{lenLol(tilings_ordered_by_symmetry_lol)}.png", True)
 
-    index = 0
-    for sym_group in tilings_ordered_by_symmetry_lol:
-        for tiling in sym_group:
-            flat_symmetrically_ordered_list[index] = tiling
-            index += 1
-    plotTilings(flat_symmetrically_ordered_list, f"tilings_symetrically_ordered_{WIDTH}x{HEIGHT}_{lenLol(tilings_ordered_by_symmetry_lol)}.png") 
-    #TODO: plot filtered and ordered
+    # flat_symmetrically_ordered_list = np.empty(lenLol(tilings_ordered_by_symmetry_lol), dtype=object)
+
+    # index = 0
+    # for sym_group in tilings_ordered_by_symmetry_lol:
+    #     for tiling in sym_group:
+    #         flat_symmetrically_ordered_list[index] = tiling
+    #         index += 1
+    # plotTilings(flat_symmetrically_ordered_list, f"tilings_symetrically_ordered_{WIDTH}x{HEIGHT}_{lenLol(tilings_ordered_by_symmetry_lol)}.png") 
 
 def pad_num_str(num, length):
     return(str(num).rjust(length, ' '))
@@ -559,11 +583,11 @@ def plotTest(num_tilings):
 
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
-    WIDTH = 4
-    HEIGHT = 4
+    WIDTH = 5
+    HEIGHT = 5
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
-    PRINT_PROGRESS = False              # Recommended for large grids
+    PRINT_PROGRESS = True              # Recommended for large grids
     SHOW_IMAGE = True                  # Not recommended for large grids (> 5x5)
     ###########################################################################
     run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE)

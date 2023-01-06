@@ -203,7 +203,6 @@ def attemptToAddCombo(tiling, L_tile_type, combo, start_label):
     if(didFail):
         for j in range(0, undoLimit):
             removeL_Tile(tiling, L_tile_type, combo[j])
-    #did not fail
     return(not(didFail)) 
 
 def removeCombo(tiling, L_tile_type, combo):

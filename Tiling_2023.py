@@ -2,7 +2,7 @@
     According to https://www.numbersaplenty.com/2023, there are exactly 2023 ways to tile a 4x4 grid using only L tiles and monominos. It does not clarify if rotations or reflections count as different ways, or prove the statement. This Python program will attempt to verify it.
 """
 # Note: Profile by doing 'python -m cProfile -s tottime Tiling_2023.py'
-import numpy as np, itertools as it, bisect as b, copy, math, matplotlib.pyplot as plt, matplotlib.ticker as mticker
+import numpy as np, itertools as it, bisect as b, copy, math, matplotlib.pyplot as plt, matplotlib.ticker as mticker, functools
 from matplotlib.ticker import AutoMinorLocator
 
 def setupCalculationGlobals(givenWidth, givenHeight):
@@ -232,6 +232,9 @@ def getAllTilings(filter_file):
         addAllTilingsForNumLTiles(tilings, num_L_tiles, filter_file)
     return(tilings)
 
+def lenLol(lol):
+    return (functools.reduce(lambda length, lst: length + len(lst), lol, 0))
+
 def printOutput(tilings_original_order, symmetry_representations, tilings_ordered_by_symmetry_lol, original_tiling_sym_indexes):
     """
         If PRINT_INDIVIDUAL_TILINGS is True, will print all tilings as well as how many there are, otherwise only prints number of tilings.
@@ -248,6 +251,24 @@ def printOutput(tilings_original_order, symmetry_representations, tilings_ordere
             print(f"The above tiling is: " + (f"first in its symmetry group." if(original_tiling_sym_indexes[index] == -1) else f"symmetric to tiling {original_tiling_sym_indexes[index] + 1}."),  file = f, end="\n\n")
         print(f"For {WIDTH} x {HEIGHT} rectangles:", file = f)
         print(f"The number of tilings is: {len(tilings_original_order)}", file = f)
+
+    symmetrically_unique_tilings_filename = f"tilings_symmetrically_unique_{WIDTH}x{HEIGHT}_{len(tilings_ordered_by_symmetry_lol)}.txt"
+    with open(symmetrically_unique_tilings_filename, 'w') as f:
+        for index, sym_group in enumerate(tilings_ordered_by_symmetry_lol):
+            print(f"{index + 1}:\n{sym_group[0]}\n", file = f)
+        print(f"For {WIDTH} x {HEIGHT} rectangles:", file = f)
+        print(f"The number of symmetrically unique tilings is: {len(tilings_ordered_by_symmetry_lol)}", file = f)
+
+    tilings_ordered_by_symmetry_filename = f"tilings_symmetrically_ordered_{WIDTH}x{HEIGHT}_{lenLol(tilings_ordered_by_symmetry_lol)}.txt"
+    with open(tilings_ordered_by_symmetry_filename, 'w') as f:
+        index = 1
+        for sym_group in tilings_ordered_by_symmetry_lol:
+            for tiling in sym_group:
+                print(f"{index}:\n{tiling}\n", file = f)
+                index += 1
+            print("-" * 50, file = f)
+        print(f"For {WIDTH} x {HEIGHT} rectangles:", file = f)
+        print(f"The number of tilings is: {lenLol(tilings_ordered_by_symmetry_lol)}", file = f)
 
 """
     WARN: 
@@ -495,7 +516,7 @@ def plotAllTilings(tilings):
     plt.imshow(colors, interpolation='nearest')
     plt.tight_layout()
     # plt.title(f"{len(tilings)} Tilings of a {WIDTH} x {HEIGHT} Grid" ) #cut off
-    plt.savefig(f"tilings_{WIDTH}x{HEIGHT}_{len(tilings)}.png", format = "png", dpi=800)
+    plt.savefig(f"tilings_original_{WIDTH}x{HEIGHT}_{len(tilings)}.png", format = "png", dpi=800)
 
 def run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE):
     setupCalculationGlobals(givenWidth = WIDTH, givenHeight = HEIGHT)
@@ -522,8 +543,8 @@ def plotTest(num_tilings):
 
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
-    WIDTH = 2
-    HEIGHT = 2
+    WIDTH = 4
+    HEIGHT = 4
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
     PRINT_PROGRESS = False              # Recommended for large grids

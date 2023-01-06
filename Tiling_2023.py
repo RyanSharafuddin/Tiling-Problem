@@ -353,12 +353,12 @@ def transformSymRep(symmetry_representation, num_times, height, width, flip):
     return(tuple(new_symmetry_representation))
 
 def getTilingsFilteredForSymmetry(tilings_container):
+    original_tilings, symmetry_representations = tilings_container
     # print(f"tilings_container: \n{tilings_container}")
     filtered_tilings = []
-    filtered_tiling_symmetry_representations = set()
-    for index, symmetry_representation in enumerate(tilings_container[1]):
-        # print(f"IN GET TILINGS FILTERED\nTiling:\n{tilings_container[0][index]}\nsym_rep\n{symmetry_representation}")
-        # symmetry_representation = tuple(symmetry_representation)
+    all_tilings_ordered_by_symmetry_tuple = [], [] #second list says where last member of each symmetry group is 
+    filtered_tiling_symmetry_representations = dict() #dict from sym_rep to original_index
+    for index, symmetry_representation in enumerate(symmetry_representations):
         duplicate = False
         symmetry_reps_this_tiling = getSymmetries(symmetry_representation)
         for symmetry in symmetry_reps_this_tiling:
@@ -366,8 +366,10 @@ def getTilingsFilteredForSymmetry(tilings_container):
                 duplicate = True #TODO: print that this tiling is a duplicate, and maybe add some info to set to display which previous tiling it's a duplicate of
                 break
         if(not(duplicate)):
-            filtered_tiling_symmetry_representations.add(symmetry_representation)
-            filtered_tilings.append(tilings_container[0][index])
+            filtered_tiling_symmetry_representations[symmetry_representation] = index
+            filtered_tilings.append(original_tilings[index])
+        else:
+            b =6 #filler statement. Reorder the ordered tilings #TODO
     return(filtered_tilings)
 
 def getSymmetries(symmetry_representation):

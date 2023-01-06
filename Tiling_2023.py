@@ -75,7 +75,7 @@ def loop_rec(n, tiling, filtered_L_tile_locations, start_label, tilings, combo_a
         
 def findRightMost(l, item):
     """
-        Given a sorted iterable l and an item, finds the index of the rightmost occurence of the item in l, or returns -1 if item is not in the list. Uses binary search. #TODO consider just counting the number of each L_tile if profiling shows this is taking too long.
+        Given a sorted iterable l and an item, finds the index of the rightmost occurence of the item in l, or returns -1 if item is not in the list. Uses binary search.
     """
     index = b.bisect_right(l, item)
     return((index - 1) if ((index != 0) and l[index - 1] == item) else -1)
@@ -232,9 +232,9 @@ def getAllTilings(filter_file):
         addAllTilingsForNumLTiles(tilings, num_L_tiles, filter_file)
     return(tilings)
 
-def printOutput(tilings):
+def printOutput(tilings_original_order, symmetry_representations, tilings_ordered_by_symmetry_lol, original_tiling_sym_indexes):
     #TODO: print the symmetry representations, and then stop printing them.
-    (tilings, symmetry_representation) = tilings
+    tilings = tilings_original_order
     """
         If PRINT_INDIVIDUAL_TILINGS is True, will print all tilings as well as how many there are, otherwise only prints number of tilings.
         Prints output to a file called tilings_{WIDTH}x{HEIGHT}.txt
@@ -354,28 +354,24 @@ def transformSymRep(symmetry_representation, num_times, height, width, flip):
 
 def getTilingsFilteredForSymmetry(tilings_container):
     original_tilings, symmetry_representations = tilings_container
-    raise Exception("Unimplemented")
-    original_tiling_sym_indexes = [] #@ list[i] contains j means original_tilings[i] is symmetric to original_tilings[j], or is first of its sym_group if j = -1
-    tilings_ordered_by_symmetry = []
-    first_indexes_of_sym_groups = [] # If x is in this list, it means tilings_ordered_by_symmetry[x] is the first of its sym_group
+    original_tiling_sym_indexes = np.empty(len(original_tilings), dtype=np.short) #@ list[i] contains j means original_tilings[i] is symmetric to original_tilings[j], or is first of its sym_group if j = -1
+    tilings_ordered_by_symmetry_lol = [] #a list of lists. Each list is a sym_group of tilings
 
-    # print(f"tilings_container: \n{tilings_container}")
-    filtered_tilings = [] #TODO: maybe change to sym_equivalent indexes to print w/original output? Temporarily, until verified to work
-    all_tilings_ordered_by_symmetry_tuple = [], [] #second list says where first member of each symmetry group is. Obviates need for filtered_tilings list.
-    filtered_tiling_symmetry_representations = dict() #dict from sym_rep to original_index
-    for index, symmetry_representation in enumerate(symmetry_representations):
+    filtered_tiling_symmetry_representations = dict() #dict from sym_rep to a tuple: (index in original_tilings, index of the list in lol to append to)
+    for original_tiling_index, symmetry_representation in enumerate(symmetry_representations):
         duplicate = False
         symmetry_reps_this_tiling = getSymmetries(symmetry_representation)
         for symmetry in symmetry_reps_this_tiling:
-            if(symmetry in filtered_tiling_symmetry_representations):
-                duplicate = True #TODO: print that this tiling is a duplicate, and maybe add some info to set to display which previous tiling it's a duplicate of
+            index_tuple = filtered_tiling_symmetry_representations.get(symmetry, None)
+            if(index_tuple):
+                duplicate = True
+                original_tiling_sym_indexes[original_tiling_index] = index_tuple[0]
+                tilings_ordered_by_symmetry_lol[index_tuple[1]].append(original_tilings[original_tiling_index])
                 break
         if(not(duplicate)):
-            filtered_tiling_symmetry_representations[symmetry_representation] = index
-            filtered_tilings.append(original_tilings[index])
-        else:
-            b =6 #filler statement. Reorder the ordered tilings #TODO
-    return(filtered_tilings)
+            original_tiling_sym_indexes[original_tiling_index] = -1
+            tilings_ordered_by_symmetry_lol.append([original_tilings[original_tiling_index]])
+    return((tilings_ordered_by_symmetry_lol, original_tiling_sym_indexes))
 
 def getSymmetries(symmetry_representation):
 
@@ -502,22 +498,21 @@ def plotAllTilings(tilings):
 def run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE):
     setupCalculationGlobals(givenWidth = WIDTH, givenHeight = HEIGHT)
     setupOutputGlobals(printIndividualTilings = PRINT_INDIVIDUAL_TILINGS, printFilterTest = PRINT_FILTER_TEST, printProgress = PRINT_PROGRESS)
-    if(PRINT_FILTER_TEST):
-        filter_filename = f"filter_test_{WIDTH}x{HEIGHT}.txt"
-        filter_file = open(filter_filename, 'w')
-    else:
-        filter_file = None
-    tilings, symmetry_representations = getAllTilings(filter_file) #considering rotated/reflected tilings to be different
-    printOutput((tilings, symmetry_representations)) #TODO: once no longer need to print symmetry representation, only pass in tilings to this function.
+    filter_file = open(f"filter_test_{WIDTH}x{HEIGHT}.txt", 'w') if (PRINT_FILTER_TEST) else None
+    tilings_container = getAllTilings(filter_file)
+    (tilings_ordered_by_symmetry_lol, original_tiling_sym_indexes) = getTilingsFilteredForSymmetry(tilings_container)
+    tilings_original_order, symmetry_representations = tilings_container
+
+    printOutput(tilings_original_order, symmetry_representations, tilings_ordered_by_symmetry_lol, original_tiling_sym_indexes) #TODO: once no longer need to print symmetry representation, only pass in tilings to this function.
     if(filter_file):
         filter_file.close()
-    print(f"Completed calculations for {WIDTH} x {HEIGHT} grid.")
-    print(f"There are: {len(tilings)} tilings.")
+    print(f"Completed calculations for {WIDTH} x {HEIGHT} grid.") #TODO: print symmetry info
+    print(f"There are: {len(tilings_original_order)} tilings.")
     if(SHOW_IMAGE):
         print("Creating image . . .")
-        plotAllTilings(tilings)
+        plotAllTilings(tilings_original_order)
         print("Finished creating image.")
-    return((tilings, symmetry_representations)) #only used for pytest functions
+    return((tilings_original_order, symmetry_representations)) #only used for pytest functions
 
 def plotTest(num_tilings):
     tilings = np.random.random_integers(0, 7, size=(num_tilings, HEIGHT, WIDTH))

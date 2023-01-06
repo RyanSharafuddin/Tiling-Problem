@@ -203,9 +203,8 @@ def attemptToAddCombo(tiling, L_tile_type, combo, start_label):
     if(didFail):
         for j in range(0, undoLimit):
             removeL_Tile(tiling, L_tile_type, combo[j])
-        return(False)
     #did not fail
-    return(True)
+    return(not(didFail)) 
 
 def removeCombo(tiling, L_tile_type, combo):
     """
@@ -270,19 +269,15 @@ def printOutput(tilings):
 
         1) Modify loop_rec to attach the needed information to make new_tilings = [original_tilings, new_info_list], and modify printing to print it out with the original tilings.: DONE
 
-        2) Make a function that rotates this representation 90 degrees counterclockwise.
-            CURRENT PROGRESS: on the rotates function, only handles some cases so far.
-        3) Make a function that reflects this representation vertically.
+        2) Make a function that rotates this representation 90 degrees counterclockwise. DONE
+
+        3) Make a function that reflects this representation vertically. DONE
+        
         4) Test both functions as listed in test_symmetry.py.
         5) Modify below 2 symmetry functions to use this representation.
         6) testGetSymmetries.
         7) Change getTilingsFilteredBySymmetry to give all tilings ordered by symmetry as well as only symmetrically unique tilings, and configure printing/plotting for those. For testing purposes, print out text that says which of the original tilings are symmetrical to which earlier tiling.
         8) Stop printing the symmetry_representation in the tilings*.txt file once no longer needed for testing.
-    NOTE:
-        Optional Optimizations:
-            1) Instead of making each coord in LOCATIONS an np.array[y, x], make each   coord a tuple (y, x), since you're not mutating the coords, and then go to each place the coords are used and remove calls to the tuple() function (particularly in attemptToAddL_Tile) to speed things up.
-            
-            2) Make a function called reflectAndRotate for the 4 symmetries that involve reflection and rotation, profile to see how long it takes, and then do reflection/rotation all in one function if that takes too long.
 """
 
 def transformComputerCoords(num_times, coord, height, width, flip):
@@ -328,7 +323,7 @@ def transformComputerCoords(num_times, coord, height, width, flip):
             transformed_computerY = int(computerX - (width - 1)/2 + (height - 1)/2)
     return((transformed_computerY, transformed_computerX)) 
 
-def insertComboIntoNewSymmetryRepForRotation(L_tile_type, L_tile_location_combo, num_times, new_symmetry_representation, height, width, flip):
+def insertTransformedL_TileComboIntoNewSymRep(L_tile_type, L_tile_location_combo, num_times, new_symmetry_representation, height, width, flip):
     new_top_left_locs = []
     if(flip):
         offset_indexes = (0, None, None, 1)
@@ -351,10 +346,11 @@ def insertComboIntoNewSymmetryRepForRotation(L_tile_type, L_tile_location_combo,
 def transformSymRep(symmetry_representation, num_times, height, width, flip):
     #NOTE: returns a new sym rep; does not mutate old one
     #num_times corresponds to how many 90 degree counterclockwise turns
+    #flip is a boolean. If true, flip. Otherwise, rotate ccw num_times.
     new_symmetry_representation = [(), (), (), ()]
     #NOTE: L_tile_location_combo is a tuple
     for (L_tile_type, L_tile_location_combo) in enumerate(symmetry_representation):
-        insertComboIntoNewSymmetryRepForRotation(L_tile_type, L_tile_location_combo, num_times, new_symmetry_representation, height, width, flip)
+        insertTransformedL_TileComboIntoNewSymRep(L_tile_type, L_tile_location_combo, num_times, new_symmetry_representation, height, width, flip)
     return(tuple(new_symmetry_representation))
 
 def getTilingsFilteredForSymmetry(tilings_container):
@@ -374,9 +370,6 @@ def getTilingsFilteredForSymmetry(tilings_container):
             filtered_tiling_symmetry_representations.add(symmetry_representation)
             filtered_tilings.append(tilings_container[0][index])
     return(filtered_tilings)
-
-# def tuplify(sym_rep):
-#     new_sym_rep = ((tuple), (), (), ())
 
 def getSymmetries(symmetry_representation):
 
@@ -402,13 +395,11 @@ def getSymmetries(symmetry_representation):
     if(HEIGHT == WIDTH):
         #square, 8 symmetries
         rot0 = symmetry_representation
-    #     #np.rot90 rotates counterclockwise
-        # rot90 = np.rot90(tiling, 1)
         rot90 = transformSymRep(symmetry_representation, 1, HEIGHT, WIDTH, False)
         rot180 = transformSymRep(symmetry_representation, 2, HEIGHT, WIDTH, False)
         rot270 = transformSymRep(symmetry_representation, 3, HEIGHT, WIDTH, False)
 
-    #     #reflect vertical means across vertical axis
+        #reflect vertical means across vertical axis
         rot0_reflect_vertical = transformSymRep(symmetry_representation, None, HEIGHT, WIDTH, True)
         rot90_reflect_vertical = transformSymRep(rot90, None, HEIGHT, WIDTH, True)
         rot180_reflect_vertical = transformSymRep(rot180, None, HEIGHT, WIDTH, True)
@@ -416,32 +407,18 @@ def getSymmetries(symmetry_representation):
         
         symmetriesSet.update([rot0, rot90, rot180, rot270, rot0_reflect_vertical, rot90_reflect_vertical, rot180_reflect_vertical, rot270_reflect_vertical])
 
-    # else:
-    #     #rectangle, 4 symmetries
-    #     rot0 = tiling
-    #     rot180 = np.rot90(tiling, 2)
+    else:
+        # rectangle, 4 symmetries
+        rot0 = symmetry_representation
+        rot180 = transformSymRep(symmetry_representation, 2, HEIGHT, WIDTH, False)
 
-    #     reflect_horizontal = np.flip(rot0, 0)
-    #     reflect_vertical = np.flip(rot0, 1)
+        #reflect vertical means across vertical axis
+        rot0_reflect_vertical = transformSymRep(symmetry_representation, None, HEIGHT, WIDTH, True)
+        rot180_reflect_vertical = transformSymRep(rot180, None, HEIGHT, WIDTH, True)
         
-    #     symmetries_list = [rot0, rot180, reflect_horizontal, reflect_vertical]
-
-    # # print("Printing symmetries in symmetries list: ")
-    # # for symmetry in symmetries_list:
-    # #     print(symmetry, end="\n\n")
-    
-    # symmetries_tuple_list = map(tilingToTup, symmetries_list)
-    # for symmetry_tuple in symmetries_tuple_list:
-    #     symmetriesSet.add(symmetry_tuple)
-
-    # # print("Printing symmetries in symmetries set: ")
-    # # for symmetry in symmetriesSet:
-    # #     print(np.array(symmetry), end="\n\n")
+        symmetriesSet.update([rot0, rot180, rot0_reflect_vertical, rot180_reflect_vertical])
 
     return(symmetriesSet)
-
-def tilingToTup(tiling):
-    return(tuple(map(tuple, tiling)))
     
 def plotTiling(coord, tiling, colors):
     for y in range(coord[0], coord[0] + HEIGHT):
@@ -542,11 +519,11 @@ def plotTest(num_tilings):
 
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
-    WIDTH = 4
+    WIDTH = 5
     HEIGHT = 4
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
-    PRINT_PROGRESS = False              # Recommended for large grids
+    PRINT_PROGRESS = True              # Recommended for large grids
     SHOW_IMAGE = True                  # Not recommended for large grids (> 5x5)
     ###########################################################################
     run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE)

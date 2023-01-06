@@ -354,6 +354,11 @@ def transformSymRep(symmetry_representation, num_times, height, width, flip):
 
 def getTilingsFilteredForSymmetry(tilings_container):
     original_tilings, symmetry_representations = tilings_container
+    raise Exception("Unimplemented")
+    original_tiling_sym_indexes = [] #@ list[i] contains j means original_tilings[i] is symmetric to original_tilings[j], or is first of its sym_group if j = -1
+    tilings_ordered_by_symmetry = []
+    first_indexes_of_sym_groups = [] # If x is in this list, it means tilings_ordered_by_symmetry[x] is the first of its sym_group
+
     # print(f"tilings_container: \n{tilings_container}")
     filtered_tilings = [] #TODO: maybe change to sym_equivalent indexes to print w/original output? Temporarily, until verified to work
     all_tilings_ordered_by_symmetry_tuple = [], [] #second list says where first member of each symmetry group is. Obviates need for filtered_tilings list.

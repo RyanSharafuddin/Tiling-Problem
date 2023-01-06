@@ -20,7 +20,7 @@ from Tiling_2023 import *
 
 class TestSymmetry:
 
-    def test_rotate_sym_rep(self):
+    def test_transform_sym_rep(self):
         #TODO: fill in with expected values from a tiling that contains all 4 types of L tiles and at least 2 of 1 type and try all 8 symmetries on it. And see that the list remains sorted. Ditto for a rectangle with all 4 symmetries.
         WIDTH = 4
         HEIGHT = 4
@@ -78,15 +78,15 @@ class TestSymmetry:
 
         sym_rep_2010 = symmetry_representations[2010]
 
-        assert(rotSymRepCounterclockwise(sym_rep_2017, 1, HEIGHT, WIDTH) == sym_rep_2016)
+        assert(transformSymRep(sym_rep_2017, 1, HEIGHT, WIDTH, False) == sym_rep_2016)
 
-        assert(rotSymRepCounterclockwise(sym_rep_2017, 2, HEIGHT, WIDTH) == sym_rep_2015)
+        assert(transformSymRep(sym_rep_2017, 2, HEIGHT, WIDTH, False) == sym_rep_2015)
 
-        assert(rotSymRepCounterclockwise(sym_rep_2017, 3, HEIGHT, WIDTH) == sym_rep_2010)
+        assert(transformSymRep(sym_rep_2017, 3, HEIGHT, WIDTH, False) == sym_rep_2010)
 
-        direct_thrice = rotSymRepCounterclockwise(sym_rep_2017, 3, HEIGHT, WIDTH)
+        direct_thrice = transformSymRep(sym_rep_2017, 3, HEIGHT, WIDTH, False)
 
-        indirect_thrice = rotSymRepCounterclockwise(rotSymRepCounterclockwise(rotSymRepCounterclockwise(sym_rep_2017, 1, HEIGHT, WIDTH), 1, HEIGHT, WIDTH), 1, HEIGHT, WIDTH)
+        indirect_thrice = transformSymRep(transformSymRep(transformSymRep(sym_rep_2017, 1, HEIGHT, WIDTH, False), 1, HEIGHT, WIDTH, False), 1, HEIGHT, WIDTH, False)
 
         assert(indirect_thrice == direct_thrice)
 
@@ -107,16 +107,11 @@ class TestSymmetry:
 
         (((0, 0),), (), (), ((2, 1),))
         """
-        assert(rotSymRepCounterclockwise(symmetry_representations[74], 1, HEIGHT, WIDTH) == symmetry_representations[148])
-
-        #TODO: also test a rotation with 2 L tiles, one CCW equivalence between the sym reps, then test that calling rotSymRepCounterclockwise with num_times = 1 3 times is same as calling it once with num_times = 3. 
-    
-    def test_reflect_sym_rep(self):
-        raise Exception("Unimplemented")
+        assert(transformSymRep(symmetry_representations[74], 1, HEIGHT, WIDTH, False) == symmetry_representations[148])
 
     def testGetSymmetries(self):
         #TODO: test that the getSymmetries function returns 1 thing for empty tiling, 4 things for corner tiling, and expected 8 things as in above
-        raise Exception("Unimplemented")
+        raise Exception("Test Unimplemented")
 
     #Fails because not all symmetries are implemented yet
     def test_symmetry(self):

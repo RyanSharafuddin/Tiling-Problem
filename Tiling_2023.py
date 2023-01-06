@@ -355,8 +355,8 @@ def transformSymRep(symmetry_representation, num_times, height, width, flip):
 def getTilingsFilteredForSymmetry(tilings_container):
     original_tilings, symmetry_representations = tilings_container
     # print(f"tilings_container: \n{tilings_container}")
-    filtered_tilings = []
-    all_tilings_ordered_by_symmetry_tuple = [], [] #second list says where last member of each symmetry group is 
+    filtered_tilings = [] #TODO: maybe change to sym_equivalent indexes to print w/original output? Temporarily, until verified to work
+    all_tilings_ordered_by_symmetry_tuple = [], [] #second list says where first member of each symmetry group is. Obviates need for filtered_tilings list.
     filtered_tiling_symmetry_representations = dict() #dict from sym_rep to original_index
     for index, symmetry_representation in enumerate(symmetry_representations):
         duplicate = False

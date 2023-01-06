@@ -31,10 +31,27 @@ def setupCalculationGlobals(givenWidth, givenHeight):
     L_TILES = np.array(range(len(L_TILE_OFFSETS))) 
 
 def setupOutputGlobals(printIndividualTilings, printFilterTest, printProgress):
-    global PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS
+    global PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, COLORS
     PRINT_INDIVIDUAL_TILINGS = printIndividualTilings
     PRINT_FILTER_TEST = printFilterTest
     PRINT_PROGRESS = printProgress
+
+    COLORS = np.array([
+        [125, 125, 125], #7d7d7d  # Color for the monominos
+        [224, 130, 7],   #e08207
+        [48, 173, 10],   #30ad0a   
+        [9, 17, 173],    #0911ad
+        [173, 9, 159],   #ad099f
+        [217, 11, 11],   #d90b0b
+        [21, 176, 155],  #15b09b
+        [28, 74, 33],    #1c4a21
+        [172, 136, 191], #ac88bf
+        [69, 5, 23],     #450517
+        [255, 244, 28],  #fff41c
+        [7, 227, 209],   #07e3d1
+        [13, 54, 4]      #0d3604
+        #NOTE: will need to add more colors if want to graph tilings with more than 12 L tiles. Consider picking new colors randomly.
+        ], dtype=int)
 
 def addAllTilingsForNumLTiles(tilings, num_L_tiles, filter_file):
     """
@@ -246,8 +263,8 @@ def printOutput(tilings_original_order, symmetry_representations, tilings_ordere
     original_tilings_filename = f"tilings_original_{WIDTH}x{HEIGHT}_{len(tilings_original_order)}.txt"
     with open(original_tilings_filename, 'w') as f:
         for index, tiling in enumerate(tilings_original_order):
-            print(f"{index + 1}:\n{tiling}\n", file = f)
-            print(f"{symmetry_representations[index]}", file = f)
+            print(f"{index + 1}:\n{tiling}", file = f)
+            # print(f"{symmetry_representations[index]}", file = f)
             print(f"The above tiling is: " + (f"first in its symmetry group." if(original_tiling_sym_indexes[index] == -1) else f"symmetric to tiling {original_tiling_sym_indexes[index] + 1}."),  file = f, end="\n\n")
         print(f"For {WIDTH} x {HEIGHT} rectangles:", file = f)
         print(f"The number of tilings is: {len(tilings_original_order)}", file = f)
@@ -445,63 +462,41 @@ def getSymmetries(symmetry_representation):
 
     return(symmetriesSet)
     
-def plotTiling(coord, tiling, colors):
+def insertTilingInColors(coord, tiling, colors):
     for y in range(coord[0], coord[0] + HEIGHT):
         for x in range(coord[1], coord[1] + WIDTH):
             colors[y, x] = COLORS[ tiling[(y-coord[0], x-coord[1])] ]
 
-def plotAllTilings(tilings):
-    global COLORS
-
-    COLORS = np.array([
-        [125, 125, 125], #7d7d7d  # Color for the monominos
-        [224, 130, 7],   #e08207
-        [48, 173, 10],   #30ad0a   
-        [9, 17, 173],    #0911ad
-        [173, 9, 159],   #ad099f
-        [217, 11, 11],   #d90b0b
-        [21, 176, 155],  #15b09b
-        [28, 74, 33],    #1c4a21
-        [172, 136, 191], #ac88bf
-        [69, 5, 23],     #450517
-        [255, 244, 28],  #fff41c
-        [7, 227, 209],   #07e3d1
-        [13, 54, 4]      #0d3604
-        #NOTE: will need to add more colors if want to graph tilings with more than 12 L tiles. Consider picking new colors randomly.
-        ], dtype=int)
-
+def computePlotParams(tilings):
     PLOT_CELLS_WIDTH = math.ceil(len(tilings) ** .5) * (WIDTH)
     PLOT_CELLS_HEIGHT = math.ceil(len(tilings) / math.ceil(len(tilings) ** .5)) * (HEIGHT) 
     colors = np.ones((PLOT_CELLS_HEIGHT, PLOT_CELLS_WIDTH, 3), dtype=int) * 255
-
     tilings_in_column = len(colors) // (HEIGHT) 
     tilings_in_row = len(colors[0]) // (WIDTH)
-
     for index, tiling in enumerate(tilings):
         upper_left_x = (index % tilings_in_row) * (WIDTH) 
         upper_left_y = (index // tilings_in_row) * (HEIGHT)
-        plotTiling([upper_left_y, upper_left_x], tiling, colors)
-    
+        insertTilingInColors([upper_left_y, upper_left_x], tiling, colors)
     if(len(tilings) <= 5000):
         PLT_SIZE = 10
         lw_ratio = .25
     else:
         PLT_SIZE = 20
         lw_ratio = .5
+    yticks = np.linspace(0, PLOT_CELLS_HEIGHT, tilings_in_column + 1) - .5
+    xticks = np.linspace(0, PLOT_CELLS_WIDTH, tilings_in_row + 1) - .5
+    mticker.Locator.MAXTICKS = PLOT_CELLS_WIDTH * PLOT_CELLS_HEIGHT * 2
+    major_linewidth = (4 if (len(tilings) <= 500) else (1 if len(tilings) <= 5000 else 1/6))
+    return((colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth))
 
+def plotTilings(tilings, plot_name):
+    (colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth) = computePlotParams(tilings)
     fig = plt.figure()
     fig.set_figwidth(PLT_SIZE)
     fig.set_figheight(PLT_SIZE)
-
     ax = fig.gca()
-    yticks = np.linspace(0, PLOT_CELLS_HEIGHT, tilings_in_column + 1) - .5
-    xticks = np.linspace(0, PLOT_CELLS_WIDTH, tilings_in_row + 1) - .5
     ax.set_xticks(xticks)
     ax.set_yticks(yticks)
-
-    mticker.Locator.MAXTICKS = PLOT_CELLS_WIDTH * PLOT_CELLS_HEIGHT * 2
-    major_linewidth = (4 if (len(tilings) <= 500) else (1 if len(tilings) <= 5000 else 1/6))
-
     ax.xaxis.set_minor_locator(AutoMinorLocator(WIDTH))
     ax.yaxis.set_minor_locator(AutoMinorLocator(HEIGHT))
     ax.grid(which='minor', color=(0,0,0,.2), linewidth= major_linewidth * lw_ratio)
@@ -516,7 +511,24 @@ def plotAllTilings(tilings):
     plt.imshow(colors, interpolation='nearest')
     plt.tight_layout()
     # plt.title(f"{len(tilings)} Tilings of a {WIDTH} x {HEIGHT} Grid" ) #cut off
-    plt.savefig(f"tilings_original_{WIDTH}x{HEIGHT}_{len(tilings)}.png", format = "png", dpi=800)
+    plt.savefig(plot_name, format = "png", dpi=800)
+
+def plotAllTilings(tilings, tilings_ordered_by_symmetry_lol):
+    plotTilings(tilings, f"tilings_original_{WIDTH}x{HEIGHT}_{len(tilings)}.png")
+    plotTilings(list(map(lambda l: l[0], tilings_ordered_by_symmetry_lol)), f"tilings_symmetrically_unique_{WIDTH}x{HEIGHT}_{len(tilings_ordered_by_symmetry_lol)}.png")
+
+    flat_symmetrically_ordered_list = np.empty(lenLol(tilings_ordered_by_symmetry_lol), dtype=object)
+
+    index = 0
+    for sym_group in tilings_ordered_by_symmetry_lol:
+        for tiling in sym_group:
+            flat_symmetrically_ordered_list[index] = tiling
+            index += 1
+    plotTilings(flat_symmetrically_ordered_list, f"tilings_symetrically_ordered_{WIDTH}x{HEIGHT}_{lenLol(tilings_ordered_by_symmetry_lol)}.png") 
+    #TODO: plot filtered and ordered
+
+def pad_num_str(num, length):
+    return(str(num).rjust(length, ' '))
 
 def run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE):
     setupCalculationGlobals(givenWidth = WIDTH, givenHeight = HEIGHT)
@@ -529,16 +541,20 @@ def run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, P
     printOutput(tilings_original_order, symmetry_representations, tilings_ordered_by_symmetry_lol, original_tiling_sym_indexes) #TODO: once no longer need to print symmetry representation, only pass in tilings to this function.
     if(filter_file):
         filter_file.close()
-    print(f"Completed calculations for {WIDTH} x {HEIGHT} grid.") #TODO: print symmetry info
-    print(f"There are: {len(tilings_original_order)} tilings.")
+    print(f"Completed calculations for {WIDTH} x {HEIGHT} grid.")
+    total = len(tilings_original_order)
+    sym_unique = len(tilings_ordered_by_symmetry_lol)
+    pad_to = max(len(str(total)), len(str(sym_unique)))
+    print(f"There are: {pad_num_str(total, pad_to)} tilings.")
+    print(f"There are: {pad_num_str(sym_unique, pad_to)} symmetrically unique tilings.")
     if(SHOW_IMAGE):
-        print("Creating image . . .")
-        plotAllTilings(tilings_original_order)
-        print("Finished creating image.")
+        print("Creating images . . .")
+        plotAllTilings(tilings_original_order, tilings_ordered_by_symmetry_lol)
+        print("Finished creating images.")
     return((tilings_original_order, symmetry_representations)) #only used for pytest functions
 
 def plotTest(num_tilings):
-    tilings = np.random.random_integers(0, 7, size=(num_tilings, HEIGHT, WIDTH))
+    tilings = np.random.random_integers(0, len(COLORS), size=(num_tilings, HEIGHT, WIDTH))
     plotAllTilings(tilings)
 
 if(__name__ == "__main__"):

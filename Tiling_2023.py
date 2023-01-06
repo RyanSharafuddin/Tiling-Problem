@@ -233,20 +233,21 @@ def getAllTilings(filter_file):
     return(tilings)
 
 def printOutput(tilings_original_order, symmetry_representations, tilings_ordered_by_symmetry_lol, original_tiling_sym_indexes):
-    #TODO: print the symmetry representations, and then stop printing them.
-    tilings = tilings_original_order
     """
         If PRINT_INDIVIDUAL_TILINGS is True, will print all tilings as well as how many there are, otherwise only prints number of tilings.
         Prints output to a file called tilings_{WIDTH}x{HEIGHT}.txt
     """
-    if(PRINT_INDIVIDUAL_TILINGS): 
-        tilings_filename = f"tilings_{WIDTH}x{HEIGHT}_{len(tilings)}.txt"
-        with open(tilings_filename, 'w') as f:
-            for index, tiling in enumerate(tilings):
-                print(f"{index + 1}:\n{tiling}\n", file = f)
-                print(f"{symmetry_representation[index]}\n", file = f)
-            print(f"For {WIDTH} x {HEIGHT} rectangles:", file = f)
-            print(f"The number of tilings is: {len(tilings)}", file = f)
+    if(not(PRINT_INDIVIDUAL_TILINGS)):
+        return
+    #TODO: print the symmetry representations, and then stop printing them.
+    original_tilings_filename = f"tilings_original_{WIDTH}x{HEIGHT}_{len(tilings_original_order)}.txt"
+    with open(original_tilings_filename, 'w') as f:
+        for index, tiling in enumerate(tilings_original_order):
+            print(f"{index + 1}:\n{tiling}\n", file = f)
+            print(f"{symmetry_representations[index]}", file = f)
+            print(f"The above tiling is: " + (f"first in its symmetry group." if(original_tiling_sym_indexes[index] == -1) else f"symmetric to tiling {original_tiling_sym_indexes[index] + 1}."),  file = f, end="\n\n")
+        print(f"For {WIDTH} x {HEIGHT} rectangles:", file = f)
+        print(f"The number of tilings is: {len(tilings_original_order)}", file = f)
 
 """
     WARN: 
@@ -520,11 +521,11 @@ def plotTest(num_tilings):
 
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
-    WIDTH = 5
-    HEIGHT = 4
+    WIDTH = 2
+    HEIGHT = 2
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
-    PRINT_PROGRESS = True              # Recommended for large grids
+    PRINT_PROGRESS = False              # Recommended for large grids
     SHOW_IMAGE = True                  # Not recommended for large grids (> 5x5)
     ###########################################################################
     run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE)

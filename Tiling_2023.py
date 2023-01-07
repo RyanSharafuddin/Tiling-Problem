@@ -36,26 +36,29 @@ def setupOutputGlobals(printIndividualTilings, printFilterTest, printProgress):
     PRINT_FILTER_TEST = printFilterTest
     PRINT_PROGRESS = printProgress
 
-    COLORS = np.array([
-        [125, 125, 125], #7d7d7d  # Color for the monominos
-        [224, 130, 7],   #e08207
-        [48, 173, 10],   #30ad0a   
-        [9, 17, 173],    #0911ad
-        [173, 9, 159],   #ad099f
-        [217, 11, 11],   #d90b0b
-        [21, 176, 155],  #15b09b
-        [28, 74, 33],    #1c4a21
-        [172, 136, 191], #ac88bf
-        [69, 5, 23],     #450517
-        [255, 244, 28],  #fff41c
-        [7, 227, 209],   #07e3d1
-        [13, 54, 4]      #0d3604
-        #NOTE: will need to add more colors if want to graph tilings with more than 12 L tiles. Consider picking new colors randomly.
-        ], dtype=int)
+#Always define COLORS, even outside setupOutputGlobals
+COLORS = np.array([
+    [125, 125, 125], #7d7d7d  # Color for the monominos
+    [224, 130, 7],   #e08207
+    [48, 173, 10],   #30ad0a   
+    [9, 17, 173],    #0911ad
+    [173, 9, 159],   #ad099f
+    [217, 11, 11],   #d90b0b
+    [21, 176, 155],  #15b09b
+    [28, 74, 33],    #1c4a21
+    [172, 136, 191], #ac88bf
+    [69, 5, 23],     #450517
+    [255, 244, 28],  #fff41c
+    [7, 227, 209],   #07e3d1
+    [13, 54, 4]      #0d3604
+    #NOTE: will need to add more colors if want to graph tilings with more than 12 L tiles. Consider picking new colors randomly.
+    ], dtype=int)
 
-def addAllTilingsForNumLTiles(tilings, num_L_tiles, filter_file):
+def addAllTilingsForNumLTiles(tilings_container, num_L_tiles, filter_file):
     """
-        Given tilings (a list of each possible tiling) and a number of L_tiles from 0 up to MAX_POSSIBLE_L_TILES, adds all possible tilings (considering rotations and reflections to be different) to tilings. Writes filter test output to filter file if it isn't None.
+        num_L_tiles: a number of L_tiles from 0 up to MAX_POSSIBLE_L_TILES
+        adds all possible tilings and their sym_reps to tilings_container. 
+        Writes filter test output to filter file if it isn't None.
     """
     #A combo is a sorted list of which L_tiles present
     #L_tile_combos is all such combos for the given total number of L_tiles
@@ -68,13 +71,13 @@ def addAllTilingsForNumLTiles(tilings, num_L_tiles, filter_file):
             print(f"num_L_tiles: {str(num_L_tiles).rjust(3, ' ')} out of: {str(MAX_POSSIBLE_L_TILES).rjust(3, ' ')}")
             print(f"      combo: {str(index).rjust(3, ' ')} out of: {str(num_combos).rjust(3, ' ')}")
         filtered_L_tile_locations = getFilteredL_TileLocations(L_tile_combo, filter_file)
-        loop_rec(0, getEmptyTiling(), filtered_L_tile_locations, 1, tilings, [])
+        loop_rec(0, getEmptyTiling(), filtered_L_tile_locations, 1, tilings_container, [])
         if(filter_file):
             print("Filtered Locations:", file = filter_file)
             printPotentialL_TileLocations(filtered_L_tile_locations, filter_file)
             print(file = filter_file)
 
-def loop_rec(n, tiling, filtered_L_tile_locations, start_label, tilings, combo_accumulator):
+def loop_rec(n, tiling, filtered_L_tile_locations, start_label, tilings_container, combo_accumulator):
     """
         Recursive helper function for above
     """
@@ -83,16 +86,17 @@ def loop_rec(n, tiling, filtered_L_tile_locations, start_label, tilings, combo_a
             #adding combo succeeded
             combo_accumulator.append(tuple(tuple(i) for i in combo_type_n))
             if(n == (len(L_TILE_OFFSETS) - 1)): #on the last group of tiles
-                tilings[0].append(copy.deepcopy(tiling))
-                tilings[1].append(tuple(combo_accumulator))
+                tilings_container[0].append(copy.deepcopy(tiling))
+                tilings_container[1].append(tuple(combo_accumulator))
             else:
-                loop_rec(n + 1, tiling, filtered_L_tile_locations, start_label + len(combo_type_n), tilings, combo_accumulator)
+                loop_rec(n + 1, tiling, filtered_L_tile_locations, start_label + len(combo_type_n), tilings_container, combo_accumulator)
             removeCombo(tiling, n, combo_type_n)
             combo_accumulator.pop()
         
 def findRightMost(l, item):
     """
-        Given a sorted iterable l and an item, finds the index of the rightmost occurence of the item in l, or returns -1 if item is not in the list. Uses binary search.
+        l: a sorted iterable 
+        Returns the index of the rightmost occurence of item in l, or -1 if item is not in l. Uses binary search.
     """
     index = b.bisect_right(l, item)
     return((index - 1) if ((index != 0) and l[index - 1] == item) else -1)
@@ -161,7 +165,7 @@ def printPotentialL_TileLocations(potential_L_tile_locations, filter_file):
 
 def onBoardAndEmpty(tiling, location):
     """
-        Given a tiling and a coord, returns True if the coord is both within bounds of the tiling and unoccupied. Otherwise returns False.
+        returns True if the location (y,x) is within bounds of the tiling and unoccupied. Otherwise returns False.
     """
     if((location[0] < 0) or (location[0] >= HEIGHT)):
         return(False)
@@ -171,7 +175,7 @@ def onBoardAndEmpty(tiling, location):
 
 def attemptToAddL_Tile(tiling, L_tile_type, location, label):
     """
-        Given a tiling (a 2d np array of shorts, where a 0 represents a monomino and higher integers represent L tiles, where all the squares in the same L tile have the same integer), attempts to add the given L_tile_type by placing its upper left square at the given location coord. Modifies tiling (by putting the integer label in all 3 tiles of the L_tile) and returns True if possible, and returns False if not possible. If not possible, leaves tiling unchanged. This function assumes location is within bounds of the grid.
+        Given a tiling (a 2d np array of shorts, where a 0 represents a monomino and higher integers represent L tiles, where all the squares in the same L tile have the same integer), attempts to add the given L_tile_type by placing its upper left square at the given location coord. Modifies tiling (by putting the integer label in all 3 tiles of the L_tile) and returns True if possible, and returns False if not possible. If not possible, leaves tiling unchanged.
     """
     if(tiling[tuple(location)]):
         #encountered non-zero element here; this means there's already another L_tile here
@@ -242,12 +246,13 @@ def getFilteredL_TileLocations(L_tile_combo, filter_file):
 
 def getAllTilings(filter_file):
     """
-        Once globals have been setup, returns a list of all possible tilings, (considers rotations/reflections to be different)
+        Setup: Globals need to be set up.
+        Returns: tilings_container [[contains all tilings], [item is is tilings[i]'s symmetry representation]]
     """
-    tilings = [[], []]
+    tilings_container = [[], []]
     for num_L_tiles in range(0, MAX_POSSIBLE_L_TILES + 1):
-        addAllTilingsForNumLTiles(tilings, num_L_tiles, filter_file)
-    return(tilings)
+        addAllTilingsForNumLTiles(tilings_container, num_L_tiles, filter_file)
+    return(tilings_container)
 
 def lenLol(lol):
     return (functools.reduce(lambda length, lst: length + len(lst), lol, 0))
@@ -462,22 +467,24 @@ def getSymmetries(symmetry_representation):
 
     return(symmetriesSet)
     
-def insertTilingInColors(coord, tiling, colors):
-    for y in range(coord[0], coord[0] + HEIGHT):
-        for x in range(coord[1], coord[1] + WIDTH):
+def insertRectangleInColors(coord, tiling, colors, height, width):
+    for y in range(coord[0], coord[0] + height):
+        for x in range(coord[1], coord[1] + width):
             colors[y, x] = COLORS[ tiling[(y-coord[0], x-coord[1])] ]
 
 def computeSymmetryPlotParams(symmetry_lol):
     tilings_in_row = max(map(lambda l: len(l), symmetry_lol))
-    PLOT_CELLS_WIDTH = WIDTH * tilings_in_row
     tilings_in_column = len(symmetry_lol)
+
+    # if(tilings_in) #start of sym_group_rect
+    PLOT_CELLS_WIDTH = WIDTH * tilings_in_row
     PLOT_CELLS_HEIGHT = tilings_in_column * HEIGHT
     colors = np.ones((PLOT_CELLS_HEIGHT, PLOT_CELLS_WIDTH, 3), dtype=int) * 255
     for sym_index, sym_group in enumerate(symmetry_lol):
         for tiling_index, tiling in enumerate(sym_group):
             upper_left_x = tiling_index * WIDTH
             upper_left_y = sym_index * HEIGHT
-            insertTilingInColors([upper_left_y, upper_left_x], tiling, colors)
+            insertRectangleInColors([upper_left_y, upper_left_x], tiling, colors, HEIGHT, WIDTH)
     if(PLOT_CELLS_HEIGHT <= 285):
         PLT_SIZE = 10
         lw_ratio = .25
@@ -499,7 +506,7 @@ def computePlotParams(tilings):
     for index, tiling in enumerate(tilings):
         upper_left_x = (index % tilings_in_row) * (WIDTH) 
         upper_left_y = (index // tilings_in_row) * (HEIGHT)
-        insertTilingInColors([upper_left_y, upper_left_x], tiling, colors)
+        insertRectangleInColors([upper_left_y, upper_left_x], tiling, colors, HEIGHT, WIDTH)
     if(len(tilings) <= 5000):
         PLT_SIZE = 10
         lw_ratio = .25
@@ -522,10 +529,16 @@ def plotTilings(tilings, plot_name, plotting_sym_groups):
     ax.set_yticks(yticks)
     ax.xaxis.set_minor_locator(AutoMinorLocator(WIDTH))
     ax.yaxis.set_minor_locator(AutoMinorLocator(HEIGHT))
-    ax.grid(which='minor', color=(0,0,0,.2), linewidth= major_linewidth * lw_ratio)
+    # ax.grid(which='minor', color=(0,0,0,.2), linewidth= major_linewidth * lw_ratio)
+
+    for vert_line in range(9):
+        xs = np.array([vert_line * WIDTH, vert_line * WIDTH])
+        ys = np.array([0, HEIGHT * lenLol(tilings)])
+        ax.fill_between(xs, ys - .25, ys + .25, color='black')
+
 
     ax.tick_params(which='both', width=0,length=0)
-    ax.grid(which='major', color=(0,0,0,1), linewidth= major_linewidth) #Make the grid lines thinner if there are fewer tilings
+    # ax.grid(which='major', color=(0,0,0,1), linewidth= major_linewidth) #Make the grid lines thinner if there are fewer tilings
     ax.axes.xaxis.set_ticklabels([])
     ax.axes.yaxis.set_ticklabels([])
     for _, spine in ax.spines.items():
@@ -541,15 +554,6 @@ def plotAllTilings(tilings, tilings_ordered_by_symmetry_lol):
     plotTilings(list(map(lambda l: l[0], tilings_ordered_by_symmetry_lol)), f"tilings_symmetrically_unique_{WIDTH}x{HEIGHT}_{len(tilings_ordered_by_symmetry_lol)}.png", False)
 
     plotTilings(tilings_ordered_by_symmetry_lol, f"tilings_symetrically_ordered_{WIDTH}x{HEIGHT}_{lenLol(tilings_ordered_by_symmetry_lol)}.png", True)
-
-    # flat_symmetrically_ordered_list = np.empty(lenLol(tilings_ordered_by_symmetry_lol), dtype=object)
-
-    # index = 0
-    # for sym_group in tilings_ordered_by_symmetry_lol:
-    #     for tiling in sym_group:
-    #         flat_symmetrically_ordered_list[index] = tiling
-    #         index += 1
-    # plotTilings(flat_symmetrically_ordered_list, f"tilings_symetrically_ordered_{WIDTH}x{HEIGHT}_{lenLol(tilings_ordered_by_symmetry_lol)}.png") 
 
 def pad_num_str(num, length):
     return(str(num).rjust(length, ' '))
@@ -577,9 +581,10 @@ def run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, P
         print("Finished creating images.")
     return((tilings_original_order, symmetry_representations)) #only used for pytest functions
 
-def plotTest(num_tilings):
-    tilings = np.random.random_integers(0, len(COLORS), size=(num_tilings, HEIGHT, WIDTH))
-    plotAllTilings(tilings)
+def plotTest(num_tilings, testing_sym_column):
+    tilings = np.random.random_integers(0, len(COLORS) - 1, size= (num_tilings // 8, 8, HEIGHT, WIDTH) if(testing_sym_column) else (num_tilings, HEIGHT, WIDTH))
+    insert = str(num_tilings // 8) + "_column" if(testing_sym_column) else ""
+    plotTilings(tilings, f"Random_{insert}.png", testing_sym_column)
 
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
@@ -590,4 +595,8 @@ if(__name__ == "__main__"):
     PRINT_PROGRESS = True              # Recommended for large grids
     SHOW_IMAGE = True                  # Not recommended for large grids (> 5x5)
     ###########################################################################
-    run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE)
+    # run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE)
+    plotTest(16000, True)
+    #31K columns (250K tilings) too much for sym column
+    #20K columns (160K tilings) also too much
+    #trying 2K columns (16K tilings)

@@ -472,7 +472,75 @@ def insertRectangleInColors(coord, tiling, colors, height, width):
         for x in range(coord[1], coord[1] + width):
             colors[y, x] = COLORS[ tiling[(y-coord[0], x-coord[1])] ]
 
+def get_sym_group_dimensions(symmetry_lol):
+    tilings_per_sym_group = max(map(lambda l: len(l), symmetry_lol))
+    num_sym_groups = len(symmetry_lol)
+    # sym_groups_per_column = math.ceil(num_sym_groups ** .5)
+    # sym_groups_per_row = math.ceil(num_sym_groups / sym_groups_per_column)
+    
+    GAP_BETWEEN_SYM_GROUPS = 2
+    sym_group_width = tilings_per_sym_group * WIDTH 
+    #Want the whole image to be as close to square as possible. 
+    # Each sym group graphing is (sym_group_width * WIDTH + GAP_BETWEEN_SYM_GROUPS) / HEIGHT times wider than 
+    # it is tall, so want the number of sg per column to be as close as possible to sym_groups_per_row * above
+    # also, sg_row * sg_column must be >= total sg. Substitute those in to obtain below equation.
+    sym_groups_per_row = max(1, round(((HEIGHT / (sym_group_width + GAP_BETWEEN_SYM_GROUPS)) * num_sym_groups) ** .5))
+    sym_groups_per_column = math.ceil(num_sym_groups / sym_groups_per_row)
+    return((sym_groups_per_column, sym_groups_per_row))
+
+
+def computeSymmetrySquarePlotParams(symmetry_lol):
+    tilings_per_sym_group = max(map(lambda l: len(l), symmetry_lol))
+    num_sym_groups = len(symmetry_lol)
+    
+    GAP_BETWEEN_SYM_GROUPS = 2
+    sym_group_width = tilings_per_sym_group * WIDTH 
+
+    (sym_groups_per_column, sym_groups_per_row) = get_sym_group_dimensions(symmetry_lol)
+
+    PLOT_CELLS_WIDTH =  (sym_groups_per_row * tilings_per_sym_group * WIDTH) + ((sym_groups_per_row - 1) * GAP_BETWEEN_SYM_GROUPS)
+    PLOT_CELLS_HEIGHT = sym_groups_per_column * HEIGHT
+    colors = np.ones((PLOT_CELLS_HEIGHT, PLOT_CELLS_WIDTH, 3), dtype=int) * 255
+    minor_x_ticks = []
+    for sym_group_index, sym_group in enumerate(symmetry_lol):
+        sym_groups_done_this_row = (sym_group_index % sym_groups_per_row) 
+        sym_group_upper_left_x = sym_groups_done_this_row * (sym_group_width + GAP_BETWEEN_SYM_GROUPS)
+        sym_group_upper_left_y = (sym_group_index // sym_groups_per_row) * HEIGHT
+        for x in range(sym_group_width):
+            minor_x_ticks.append(x + sym_group_upper_left_x)
+        for tiling_index, tiling in enumerate(sym_group):
+            tiling_upper_left_x = tiling_index * WIDTH + sym_group_upper_left_x
+            tiling_upper_left_y = sym_group_upper_left_y
+            insertRectangleInColors((tiling_upper_left_y, tiling_upper_left_x), tiling, colors, HEIGHT, WIDTH)
+    minor_x_ticks = np.array(minor_x_ticks) - .5
+    if(PLOT_CELLS_HEIGHT <= 285):
+        PLT_SIZE = 10
+        lw_ratio = .25
+    else:
+        PLT_SIZE = 20
+        lw_ratio = .5
+
+    last_x_tick = -1 * WIDTH
+    xticks = []
+    for sg in range(sym_groups_per_row + 1):
+        for t in range(tilings_per_sym_group + 1):
+            xticks.append(last_x_tick + WIDTH)
+            last_x_tick += WIDTH
+        last_x_tick += (GAP_BETWEEN_SYM_GROUPS - WIDTH)
+    yticks = np.linspace(0, PLOT_CELLS_HEIGHT, sym_groups_per_column + 1) - .5
+    xticks = np.array(xticks) - .5
+    mticker.Locator.MAXTICKS = PLOT_CELLS_WIDTH * PLOT_CELLS_HEIGHT * 2
+    major_linewidth = (4 if (PLOT_CELLS_HEIGHT <= 92) else (1 if PLOT_CELLS_HEIGHT <= 285 else 1/6))
+    # minor_x_ticks = np.linspace(0, PLOT_CELLS_WIDTH, PLOT_CELLS_WIDTH + 1) - .5
+    minor_y_ticks = np.linspace(0, PLOT_CELLS_HEIGHT, PLOT_CELLS_HEIGHT + 1) - .5
+    return((colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth, minor_x_ticks, minor_y_ticks))         
+
 def computeSymmetryPlotParams(symmetry_lol):
+    SYM_GROUPS_SINGLE_COLUMN = False 
+    if(not(SYM_GROUPS_SINGLE_COLUMN)):
+        #sym groups are in a square
+        return(computeSymmetrySquarePlotParams(symmetry_lol))
+
     tilings_in_row = max(map(lambda l: len(l), symmetry_lol))
     tilings_in_column = len(symmetry_lol)
 
@@ -495,7 +563,9 @@ def computeSymmetryPlotParams(symmetry_lol):
     xticks = np.linspace(0, PLOT_CELLS_WIDTH, tilings_in_row + 1) - .5
     mticker.Locator.MAXTICKS = PLOT_CELLS_WIDTH * PLOT_CELLS_HEIGHT * 2
     major_linewidth = (4 if (PLOT_CELLS_HEIGHT <= 92) else (1 if PLOT_CELLS_HEIGHT <= 285 else 1/6))
-    return((colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth))
+    minor_x_ticks = np.linspace(0, PLOT_CELLS_WIDTH, PLOT_CELLS_WIDTH + 1) - .5
+    minor_y_ticks = np.linspace(0, PLOT_CELLS_HEIGHT, PLOT_CELLS_HEIGHT + 1) - .5
+    return((colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth, minor_x_ticks, minor_y_ticks))  
 
 def computePlotParams(tilings):
     PLOT_CELLS_WIDTH = math.ceil(len(tilings) ** .5) * (WIDTH)
@@ -517,28 +587,26 @@ def computePlotParams(tilings):
     xticks = np.linspace(0, PLOT_CELLS_WIDTH, tilings_in_row + 1) - .5
     mticker.Locator.MAXTICKS = PLOT_CELLS_WIDTH * PLOT_CELLS_HEIGHT * 2
     major_linewidth = (4 if (len(tilings) <= 500) else (1 if len(tilings) <= 5000 else 1/6))
-    return((colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth))
+    minor_x_ticks = np.linspace(0, PLOT_CELLS_WIDTH, PLOT_CELLS_WIDTH + 1) - .5
+    minor_y_ticks = np.linspace(0, PLOT_CELLS_HEIGHT, PLOT_CELLS_HEIGHT + 1) - .5
+    return((colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth, minor_x_ticks, minor_y_ticks))  
 
 def plotTilings(tilings, plot_name, plotting_sym_groups):
-    (colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth) = computeSymmetryPlotParams(tilings) if (plotting_sym_groups) else computePlotParams(tilings)
+    (colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth, minor_x_ticks, minor_y_ticks) = computeSymmetryPlotParams(tilings) if (plotting_sym_groups) else computePlotParams(tilings)
     fig = plt.figure()
     fig.set_figwidth(PLT_SIZE)
     fig.set_figheight(PLT_SIZE)
     ax = fig.gca()
     ax.set_xticks(xticks)
     ax.set_yticks(yticks)
-    ax.xaxis.set_minor_locator(AutoMinorLocator(WIDTH))
-    ax.yaxis.set_minor_locator(AutoMinorLocator(HEIGHT))
-    # ax.grid(which='minor', color=(0,0,0,.2), linewidth= major_linewidth * lw_ratio)
-
-    for vert_line in range(9):
-        xs = np.array([vert_line * WIDTH, vert_line * WIDTH])
-        ys = np.array([0, HEIGHT * lenLol(tilings)])
-        ax.fill_between(xs, ys - .25, ys + .25, color='black')
-
+    ax.set_yticks(minor_y_ticks, minor=True)
+    ax.set_xticks(minor_x_ticks, minor=True)
+    # ax.xaxis.set_minor_locator(AutoMinorLocator(WIDTH))
+    # ax.yaxis.set_minor_locator(AutoMinorLocator(HEIGHT))
+    ax.grid(which='minor', color=(0,0,0,.2), linewidth= major_linewidth * lw_ratio)
 
     ax.tick_params(which='both', width=0,length=0)
-    # ax.grid(which='major', color=(0,0,0,1), linewidth= major_linewidth) #Make the grid lines thinner if there are fewer tilings
+    ax.grid(which='major', color=(0,0,0,1), linewidth= major_linewidth) #Make the grid lines thinner if there are fewer tilings
     ax.axes.xaxis.set_ticklabels([])
     ax.axes.yaxis.set_ticklabels([])
     for _, spine in ax.spines.items():
@@ -581,22 +649,23 @@ def run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, P
         print("Finished creating images.")
     return((tilings_original_order, symmetry_representations)) #only used for pytest functions
 
-def plotTest(num_tilings, testing_sym_column):
-    tilings = np.random.random_integers(0, len(COLORS) - 1, size= (num_tilings // 8, 8, HEIGHT, WIDTH) if(testing_sym_column) else (num_tilings, HEIGHT, WIDTH))
-    insert = str(num_tilings // 8) + "_column" if(testing_sym_column) else ""
+def plotTest(num, testing_sym_column):
+    #if(testing_sym_column), interpret num as num_sym_groups, otherwise, num_tilings
+    tilings = np.random.random_integers(0, len(COLORS) - 1, size= (num, 8, HEIGHT, WIDTH) if(testing_sym_column) else (num, HEIGHT, WIDTH))
+    insert = str(num) + "_column" if(testing_sym_column) else ""
     plotTilings(tilings, f"Random_{insert}.png", testing_sym_column)
 
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
-    WIDTH = 5
-    HEIGHT = 5
+    WIDTH = 4
+    HEIGHT = 4
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
     PRINT_PROGRESS = True              # Recommended for large grids
     SHOW_IMAGE = True                  # Not recommended for large grids (> 5x5)
     ###########################################################################
     # run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE)
-    plotTest(16000, True)
+    plotTest(287, True)
     #31K columns (250K tilings) too much for sym column
     #20K columns (160K tilings) also too much
     #trying 2K columns (16K tilings)

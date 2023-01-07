@@ -2,8 +2,7 @@
     According to https://www.numbersaplenty.com/2023, there are exactly 2023 ways to tile a 4x4 grid using only L tiles and monominos. It does not clarify if rotations or reflections count as different ways, or prove the statement. This Python program will attempt to verify it.
 """
 # Note: Profile by doing 'python -m cProfile -s tottime Tiling_2023.py'
-import numpy as np, itertools as it, bisect as b, copy, math, matplotlib.pyplot as plt, matplotlib.ticker as mticker, functools
-from matplotlib.ticker import AutoMinorLocator
+import numpy as np, itertools as it, bisect as b, copy, math, matplotlib.pyplot as plt, matplotlib.ticker as mticker, functools, os
 
 def setupCalculationGlobals(givenWidth, givenHeight):
     global WIDTH,  HEIGHT,  TOTAL,  MAX_POSSIBLE_L_TILES,  L_TILES,  LOCATIONS,  L_TILE_OFFSETS
@@ -265,7 +264,7 @@ def printOutput(tilings_original_order, symmetry_representations, tilings_ordere
     if(not(PRINT_INDIVIDUAL_TILINGS)):
         return
     #TODO: print the symmetry representations, and then stop printing them.
-    original_tilings_filename = f"tilings_original_{WIDTH}x{HEIGHT}_{len(tilings_original_order)}.txt"
+    original_tilings_filename = os.path.join(FILE_PREFIX, f"tilings_{WIDTH}x{HEIGHT}_{len(tilings_original_order)}.txt")
     with open(original_tilings_filename, 'w') as f:
         for index, tiling in enumerate(tilings_original_order):
             print(f"{index + 1}:\n{tiling}", file = f)
@@ -274,14 +273,14 @@ def printOutput(tilings_original_order, symmetry_representations, tilings_ordere
         print(f"For {WIDTH} x {HEIGHT} rectangles:", file = f)
         print(f"The number of tilings is: {len(tilings_original_order)}", file = f)
 
-    symmetrically_unique_tilings_filename = f"tilings_symmetrically_unique_{WIDTH}x{HEIGHT}_{len(tilings_ordered_by_symmetry_lol)}.txt"
+    symmetrically_unique_tilings_filename = os.path.join(FILE_PREFIX, f"sym_unique_{WIDTH}x{HEIGHT}_{len(tilings_ordered_by_symmetry_lol)}.txt")
     with open(symmetrically_unique_tilings_filename, 'w') as f:
         for index, sym_group in enumerate(tilings_ordered_by_symmetry_lol):
             print(f"{index + 1}:\n{sym_group[0]}\n", file = f)
         print(f"For {WIDTH} x {HEIGHT} rectangles:", file = f)
         print(f"The number of symmetrically unique tilings is: {len(tilings_ordered_by_symmetry_lol)}", file = f)
 
-    tilings_ordered_by_symmetry_filename = f"tilings_symmetrically_ordered_{WIDTH}x{HEIGHT}_{lenLol(tilings_ordered_by_symmetry_lol)}.txt"
+    tilings_ordered_by_symmetry_filename = os.path.join(FILE_PREFIX, f"sym_order_{WIDTH}x{HEIGHT}_{lenLol(tilings_ordered_by_symmetry_lol)}.txt")
     with open(tilings_ordered_by_symmetry_filename, 'w') as f:
         index = 1
         for sym_group in tilings_ordered_by_symmetry_lol:
@@ -493,19 +492,23 @@ def computeSymmetrySquarePlotParams(symmetry_lol):
     tilings_per_sym_group = max(map(lambda l: len(l), symmetry_lol))
     num_sym_groups = len(symmetry_lol)
     
-    GAP_BETWEEN_SYM_GROUPS = 2
     sym_group_width = tilings_per_sym_group * WIDTH 
 
     (sym_groups_per_column, sym_groups_per_row) = get_sym_group_dimensions(symmetry_lol)
 
-    PLOT_CELLS_WIDTH =  (sym_groups_per_row * tilings_per_sym_group * WIDTH) + ((sym_groups_per_row - 1) * GAP_BETWEEN_SYM_GROUPS)
-    PLOT_CELLS_HEIGHT = sym_groups_per_column * HEIGHT
+    PLOT_CELLS_WIDTH, PLOT_CELLS_HEIGHT = getPlotWidthHeight(symmetry_lol, True)
     colors = np.ones((PLOT_CELLS_HEIGHT, PLOT_CELLS_WIDTH, 3), dtype=int) * 255
     minor_x_ticks = []
     for sym_group_index, sym_group in enumerate(symmetry_lol):
-        sym_groups_done_this_row = (sym_group_index % sym_groups_per_row) 
-        sym_group_upper_left_x = sym_groups_done_this_row * (sym_group_width + GAP_BETWEEN_SYM_GROUPS)
-        sym_group_upper_left_y = (sym_group_index // sym_groups_per_row) * HEIGHT
+
+        # sym_groups_done_this_row = (sym_group_index % sym_groups_per_row) 
+        # sym_group_upper_left_x = sym_groups_done_this_row * (sym_group_width + GAP_BETWEEN_SYM_GROUPS)
+        # sym_group_upper_left_y = (sym_group_index // sym_groups_per_row) * HEIGHT
+
+        sym_groups_done_this_column = (sym_group_index % sym_groups_per_column)
+        sym_group_upper_left_x = (sym_group_index // sym_groups_per_column) * (sym_group_width + GAP_BETWEEN_SYM_GROUPS)
+        sym_group_upper_left_y = sym_groups_done_this_column * HEIGHT
+
         for x in range(sym_group_width):
             minor_x_ticks.append(x + sym_group_upper_left_x)
         for tiling_index, tiling in enumerate(sym_group):
@@ -536,7 +539,6 @@ def computeSymmetrySquarePlotParams(symmetry_lol):
     return((colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth, minor_x_ticks, minor_y_ticks))         
 
 def computeSymmetryPlotParams(symmetry_lol):
-    SYM_GROUPS_SINGLE_COLUMN = False 
     if(not(SYM_GROUPS_SINGLE_COLUMN)):
         #sym groups are in a square
         return(computeSymmetrySquarePlotParams(symmetry_lol))
@@ -545,8 +547,7 @@ def computeSymmetryPlotParams(symmetry_lol):
     tilings_in_column = len(symmetry_lol)
 
     # if(tilings_in) #start of sym_group_rect
-    PLOT_CELLS_WIDTH = WIDTH * tilings_in_row
-    PLOT_CELLS_HEIGHT = tilings_in_column * HEIGHT
+    PLOT_CELLS_WIDTH, PLOT_CELLS_HEIGHT = getPlotWidthHeight(symmetry_lol, True)
     colors = np.ones((PLOT_CELLS_HEIGHT, PLOT_CELLS_WIDTH, 3), dtype=int) * 255
     for sym_index, sym_group in enumerate(symmetry_lol):
         for tiling_index, tiling in enumerate(sym_group):
@@ -568,8 +569,7 @@ def computeSymmetryPlotParams(symmetry_lol):
     return((colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth, minor_x_ticks, minor_y_ticks))  
 
 def computePlotParams(tilings):
-    PLOT_CELLS_WIDTH = math.ceil(len(tilings) ** .5) * (WIDTH)
-    PLOT_CELLS_HEIGHT = math.ceil(len(tilings) / math.ceil(len(tilings) ** .5)) * (HEIGHT) 
+    PLOT_CELLS_WIDTH, PLOT_CELLS_HEIGHT = getPlotWidthHeight(tilings, False)
     colors = np.ones((PLOT_CELLS_HEIGHT, PLOT_CELLS_WIDTH, 3), dtype=int) * 255
     tilings_in_column = len(colors) // (HEIGHT) 
     tilings_in_row = len(colors[0]) // (WIDTH)
@@ -589,9 +589,62 @@ def computePlotParams(tilings):
     major_linewidth = (4 if (len(tilings) <= 500) else (1 if len(tilings) <= 5000 else 1/6))
     minor_x_ticks = np.linspace(0, PLOT_CELLS_WIDTH, PLOT_CELLS_WIDTH + 1) - .5
     minor_y_ticks = np.linspace(0, PLOT_CELLS_HEIGHT, PLOT_CELLS_HEIGHT + 1) - .5
-    return((colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth, minor_x_ticks, minor_y_ticks))  
+    return((colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth, minor_x_ticks, minor_y_ticks))
+
+def getPlotWidthHeight(tilings, plotting_sym_groups):
+    if(plotting_sym_groups):
+        if(SYM_GROUPS_SINGLE_COLUMN):
+            tilings_in_row = max(map(lambda l: len(l), tilings))
+            tilings_in_column = len(tilings)
+            # if(tilings_in) #start of sym_group_rect
+            PLOT_CELLS_WIDTH = WIDTH * tilings_in_row
+            PLOT_CELLS_HEIGHT = tilings_in_column * HEIGHT
+        else: 
+            tilings_per_sym_group = max(map(lambda l: len(l), tilings))
+            num_sym_groups = len(tilings)
+            
+            sym_group_width = tilings_per_sym_group * WIDTH 
+
+            (sym_groups_per_column, sym_groups_per_row) = get_sym_group_dimensions(tilings)
+
+            PLOT_CELLS_WIDTH =  (sym_groups_per_row * tilings_per_sym_group * WIDTH) + ((sym_groups_per_row - 1) * GAP_BETWEEN_SYM_GROUPS)
+            PLOT_CELLS_HEIGHT = sym_groups_per_column * HEIGHT
+    else:
+        PLOT_CELLS_WIDTH = math.ceil(len(tilings) ** .5) * (WIDTH)
+        PLOT_CELLS_HEIGHT = math.ceil(len(tilings) / math.ceil(len(tilings) ** .5)) * (HEIGHT) 
+    return((PLOT_CELLS_WIDTH, PLOT_CELLS_HEIGHT))
+
+
+def getMaxTilingsOrSymRowsPerPage(max_cell_length, plotting_sym_group, tilings):
+    if(plotting_sym_group):
+        if(SYM_GROUPS_SINGLE_COLUMN):
+            return(math.floor(max_cell_length / HEIGHT))
+        else:
+            x = 8 * WIDTH + GAP_BETWEEN_SYM_GROUPS
+            guess = (round((max_cell_length** 2) / (x * HEIGHT) ))
+    else:
+        guess = (min(math.floor(max_cell_length ** 2 / HEIGHT) , math.floor(max_cell_length ** 2 / WIDTH)))
+    if(max(getPlotWidthHeight(tilings[:guess], plotting_sym_group)) > max_cell_length):
+        while( (max(getPlotWidthHeight(tilings[:guess], plotting_sym_group)) > max_cell_length) and (guess > 1)):
+            guess -= 1
+        return(guess)
+    else:
+        while( (max(getPlotWidthHeight(tilings[:guess + 1], plotting_sym_group)) < max_cell_length) and (guess < len(tilings))):
+            guess += 1
+    return(guess)
 
 def plotTilings(tilings, plot_name, plotting_sym_groups):
+    max_tilings_or_sym_rows = getMaxTilingsOrSymRowsPerPage(MAX_CELL_LENGTH_PER_PAGE, plotting_sym_groups, tilings)
+    if(max_tilings_or_sym_rows < len(tilings)):
+        num_pages_needed = math.ceil(len(tilings) / max_tilings_or_sym_rows)
+        for page in range(num_pages_needed):
+            start_index = page * max_tilings_or_sym_rows
+            end_index = (page + 1) *  max_tilings_or_sym_rows #non inclusive for range
+            tilings_this_page = tilings[start_index: end_index]
+            filename = f"{plot_name[0:-4]}_page_{page+1}_{start_index+ 1}_{start_index + len(tilings_this_page)}{plot_name[-4:]}"
+            print(f"Output {filename}.\n")
+            plotTilings(tilings_this_page, filename, plotting_sym_groups)
+           
     (colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth, minor_x_ticks, minor_y_ticks) = computeSymmetryPlotParams(tilings) if (plotting_sym_groups) else computePlotParams(tilings)
     fig = plt.figure()
     fig.set_figwidth(PLT_SIZE)
@@ -601,8 +654,6 @@ def plotTilings(tilings, plot_name, plotting_sym_groups):
     ax.set_yticks(yticks)
     ax.set_yticks(minor_y_ticks, minor=True)
     ax.set_xticks(minor_x_ticks, minor=True)
-    # ax.xaxis.set_minor_locator(AutoMinorLocator(WIDTH))
-    # ax.yaxis.set_minor_locator(AutoMinorLocator(HEIGHT))
     ax.grid(which='minor', color=(0,0,0,.2), linewidth= major_linewidth * lw_ratio)
 
     ax.tick_params(which='both', width=0,length=0)
@@ -618,10 +669,10 @@ def plotTilings(tilings, plot_name, plotting_sym_groups):
     plt.savefig(plot_name, format = "png", dpi=800)
 
 def plotAllTilings(tilings, tilings_ordered_by_symmetry_lol):
-    plotTilings(tilings, f"tilings_original_{WIDTH}x{HEIGHT}_{len(tilings)}.png", False)
-    plotTilings(list(map(lambda l: l[0], tilings_ordered_by_symmetry_lol)), f"tilings_symmetrically_unique_{WIDTH}x{HEIGHT}_{len(tilings_ordered_by_symmetry_lol)}.png", False)
+    plotTilings(tilings, os.path.join(FILE_PREFIX, f"tilings_{WIDTH}x{HEIGHT}_{len(tilings)}.png"), False)
+    plotTilings(list(map(lambda l: l[0], tilings_ordered_by_symmetry_lol)), os.path.join(FILE_PREFIX, f"sym_unique_{WIDTH}x{HEIGHT}_{len(tilings_ordered_by_symmetry_lol)}.png"), False)
 
-    plotTilings(tilings_ordered_by_symmetry_lol, f"tilings_symetrically_ordered_{WIDTH}x{HEIGHT}_{lenLol(tilings_ordered_by_symmetry_lol)}.png", True)
+    plotTilings(tilings_ordered_by_symmetry_lol, os.path.join(FILE_PREFIX, f"sym_order_{WIDTH}x{HEIGHT}_{lenLol(tilings_ordered_by_symmetry_lol)}.png"), True)
 
 def pad_num_str(num, length):
     return(str(num).rjust(length, ' '))
@@ -629,7 +680,14 @@ def pad_num_str(num, length):
 def run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE):
     setupCalculationGlobals(givenWidth = WIDTH, givenHeight = HEIGHT)
     setupOutputGlobals(printIndividualTilings = PRINT_INDIVIDUAL_TILINGS, printFilterTest = PRINT_FILTER_TEST, printProgress = PRINT_PROGRESS)
-    filter_file = open(f"filter_test_{WIDTH}x{HEIGHT}.txt", 'w') if (PRINT_FILTER_TEST) else None
+    TILINGS_DIRECTORY = f"Tilings_{HEIGHT}_{WIDTH}"
+    global FILE_PREFIX
+    FILE_PREFIX = os.path.join(OUTPUT_DIRECTORY, TILINGS_DIRECTORY)
+
+    if(PRINT_INDIVIDUAL_TILINGS or PRINT_FILTER_TEST or SHOW_IMAGE):
+        if(not(os.path.exists(FILE_PREFIX))):
+            os.makedirs(FILE_PREFIX)
+    filter_file = open(os.path.join(FILE_PREFIX, f"filter_test_{WIDTH}x{HEIGHT}.txt"), 'w') if (PRINT_FILTER_TEST) else None
     tilings_container = getAllTilings(filter_file)
     (tilings_ordered_by_symmetry_lol, original_tiling_sym_indexes) = getTilingsFilteredForSymmetry(tilings_container)
     tilings_original_order, symmetry_representations = tilings_container
@@ -657,15 +715,17 @@ def plotTest(num, testing_sym_column):
 
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
-    WIDTH = 4
+    WIDTH = 5
     HEIGHT = 4
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
-    PRINT_PROGRESS = True              # Recommended for large grids
-    SHOW_IMAGE = True                  # Not recommended for large grids (> 5x5)
+    PRINT_PROGRESS = False              # Recommended for large grids
+    SHOW_IMAGE = True                  # Not recommended for large grids (> 5x5) 
+    SYM_GROUPS_SINGLE_COLUMN = False 
+    GAP_BETWEEN_SYM_GROUPS = 2
+    MAX_CELL_LENGTH_PER_PAGE = 1200  # 1200 works(4x4 287 1 column) 400 for 4x4
+    OUTPUT_DIRECTORY = "Outputs"
     ###########################################################################
-    # run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE)
-    plotTest(287, True)
-    #31K columns (250K tilings) too much for sym column
-    #20K columns (160K tilings) also too much
-    #trying 2K columns (16K tilings)
+    run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE)
+    # plotTest(40, True)
+

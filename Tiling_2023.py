@@ -500,11 +500,6 @@ def computeSymmetrySquarePlotParams(symmetry_lol):
     colors = np.ones((PLOT_CELLS_HEIGHT, PLOT_CELLS_WIDTH, 3), dtype=int) * 255
     minor_x_ticks = []
     for sym_group_index, sym_group in enumerate(symmetry_lol):
-
-        # sym_groups_done_this_row = (sym_group_index % sym_groups_per_row) 
-        # sym_group_upper_left_x = sym_groups_done_this_row * (sym_group_width + GAP_BETWEEN_SYM_GROUPS)
-        # sym_group_upper_left_y = (sym_group_index // sym_groups_per_row) * HEIGHT
-
         sym_groups_done_this_column = (sym_group_index % sym_groups_per_column)
         sym_group_upper_left_x = (sym_group_index // sym_groups_per_column) * (sym_group_width + GAP_BETWEEN_SYM_GROUPS)
         sym_group_upper_left_y = sym_groups_done_this_column * HEIGHT
@@ -534,7 +529,6 @@ def computeSymmetrySquarePlotParams(symmetry_lol):
     xticks = np.array(xticks) - .5
     mticker.Locator.MAXTICKS = PLOT_CELLS_WIDTH * PLOT_CELLS_HEIGHT * 2
     major_linewidth = (4 if (PLOT_CELLS_HEIGHT <= 92) else (1 if PLOT_CELLS_HEIGHT <= 285 else 1/6))
-    # minor_x_ticks = np.linspace(0, PLOT_CELLS_WIDTH, PLOT_CELLS_WIDTH + 1) - .5
     minor_y_ticks = np.linspace(0, PLOT_CELLS_HEIGHT, PLOT_CELLS_HEIGHT + 1) - .5
     return((colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth, minor_x_ticks, minor_y_ticks))         
 
@@ -665,7 +659,6 @@ def plotTilings(tilings, plot_name, plotting_sym_groups):
 
     plt.imshow(colors, interpolation='nearest')
     plt.tight_layout()
-    # plt.title(f"{len(tilings)} Tilings of a {WIDTH} x {HEIGHT} Grid" ) #cut off
     plt.savefig(plot_name, format = "png", dpi=800)
 
 def plotAllTilings(tilings, tilings_ordered_by_symmetry_lol):
@@ -692,7 +685,7 @@ def run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, P
     (tilings_ordered_by_symmetry_lol, original_tiling_sym_indexes) = getTilingsFilteredForSymmetry(tilings_container)
     tilings_original_order, symmetry_representations = tilings_container
 
-    printOutput(tilings_original_order, symmetry_representations, tilings_ordered_by_symmetry_lol, original_tiling_sym_indexes) #TODO: once no longer need to print symmetry representation, only pass in tilings to this function.
+    printOutput(tilings_original_order, symmetry_representations, tilings_ordered_by_symmetry_lol, original_tiling_sym_indexes) 
     if(filter_file):
         filter_file.close()
     print(f"Completed calculations for {WIDTH} x {HEIGHT} grid.")
@@ -719,8 +712,8 @@ if(__name__ == "__main__"):
     HEIGHT = 4
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
-    PRINT_PROGRESS = False              # Recommended for large grids
-    SHOW_IMAGE = True                  # Not recommended for large grids (> 5x5) 
+    PRINT_PROGRESS = False             # Recommended for large grids
+    SHOW_IMAGE = True                  
     SYM_GROUPS_SINGLE_COLUMN = False 
     GAP_BETWEEN_SYM_GROUPS = 2
     MAX_CELL_LENGTH_PER_PAGE = 1200  # 1200 works(4x4 287 1 column) 400 for 4x4

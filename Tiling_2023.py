@@ -709,14 +709,14 @@ def plotTest(num, testing_sym_column):
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
     WIDTH = 5
-    HEIGHT = 4
+    HEIGHT = 5
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
-    PRINT_PROGRESS = False             # Recommended for large grids
+    PRINT_PROGRESS = True             # Recommended for large grids
     SHOW_IMAGE = True                  
     SYM_GROUPS_SINGLE_COLUMN = False 
     GAP_BETWEEN_SYM_GROUPS = 2
-    MAX_CELL_LENGTH_PER_PAGE = 1200  # 1200 works(4x4 287 1 column) 400 for 4x4
+    MAX_CELL_LENGTH_PER_PAGE = 2500  # 1200 works(4x4 287 1 column) 400 for 4x4 2500 should also work (~250K 5x5 tilings in a square)
     OUTPUT_DIRECTORY = "Outputs"
     ###########################################################################
     run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE)

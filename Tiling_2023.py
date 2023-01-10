@@ -280,7 +280,7 @@ def printOutput(tilings_original_order, symmetry_representations, tilings_ordere
         print(f"For {WIDTH} x {HEIGHT} rectangles:", file = f)
         print(f"The number of symmetrically unique tilings is: {len(tilings_ordered_by_symmetry_lol)}", file = f)
 
-    tilings_ordered_by_symmetry_filename = os.path.join(FILE_PREFIX, f"sym_order_{WIDTH}x{HEIGHT}_{lenLol(tilings_ordered_by_symmetry_lol)}.txt")
+    tilings_ordered_by_symmetry_filename = os.path.join(FILE_PREFIX, f"sym_order_{WIDTH}x{HEIGHT}_{len(tilings_ordered_by_symmetry_lol)}.txt")
     with open(tilings_ordered_by_symmetry_filename, 'w') as f:
         index = 1
         for sym_group in tilings_ordered_by_symmetry_lol:

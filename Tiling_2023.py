@@ -665,7 +665,7 @@ def plotAllTilings(tilings, tilings_ordered_by_symmetry_lol):
     plotTilings(tilings, os.path.join(FILE_PREFIX, f"tilings_{WIDTH}x{HEIGHT}_{len(tilings)}.png"), False)
     plotTilings(list(map(lambda l: l[0], tilings_ordered_by_symmetry_lol)), os.path.join(FILE_PREFIX, f"sym_unique_{WIDTH}x{HEIGHT}_{len(tilings_ordered_by_symmetry_lol)}.png"), False)
 
-    plotTilings(tilings_ordered_by_symmetry_lol, os.path.join(FILE_PREFIX, f"sym_order_{WIDTH}x{HEIGHT}_{lenLol(tilings_ordered_by_symmetry_lol)}.png"), True)
+    plotTilings(tilings_ordered_by_symmetry_lol, os.path.join(FILE_PREFIX, f"sym_order_{WIDTH}x{HEIGHT}_{len(tilings_ordered_by_symmetry_lol)}.png"), True)
 
 def pad_num_str(num, length):
     return(str(num).rjust(length, ' '))

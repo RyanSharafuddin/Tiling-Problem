@@ -709,7 +709,7 @@ def plotTest(num, testing_sym_column):
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
     WIDTH = 5
-    HEIGHT = 5
+    HEIGHT = 4
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
     PRINT_PROGRESS = True             # Recommended for large grids

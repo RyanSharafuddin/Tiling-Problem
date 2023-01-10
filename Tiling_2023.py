@@ -283,7 +283,8 @@ def printOutput(tilings_original_order, symmetry_representations, tilings_ordere
     tilings_ordered_by_symmetry_filename = os.path.join(FILE_PREFIX, f"sym_order_{WIDTH}x{HEIGHT}_{len(tilings_ordered_by_symmetry_lol)}.txt")
     with open(tilings_ordered_by_symmetry_filename, 'w') as f:
         index = 1
-        for sym_group in tilings_ordered_by_symmetry_lol:
+        for sym_group_num, sym_group in enumerate(tilings_ordered_by_symmetry_lol):
+            print(f"Symmetry group: {sym_group_num + 1}", file = f)
             for tiling in sym_group:
                 print(f"{index}:\n{tiling}\n", file = f)
                 index += 1
@@ -708,12 +709,12 @@ def plotTest(num, testing_sym_column):
 
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
-    WIDTH = 5
-    HEIGHT = 4
+    WIDTH = 3
+    HEIGHT = 3
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
     PRINT_PROGRESS = True             # Recommended for large grids
-    SHOW_IMAGE = True                  
+    SHOW_IMAGE = False                 
     SYM_GROUPS_SINGLE_COLUMN = False 
     GAP_BETWEEN_SYM_GROUPS = 2
     MAX_CELL_LENGTH_PER_PAGE = 2500  # 1200 works(4x4 287 1 column) 400 for 4x4 2500 should also work (~250K 5x5 tilings in a square)

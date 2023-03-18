@@ -639,6 +639,7 @@ def plotTilings(tilings, plot_name, plotting_sym_groups):
             filename = f"{plot_name[0:-4]}_page_{page+1}_{start_index+ 1}_{start_index + len(tilings_this_page)}{plot_name[-4:]}"
             print(f"Output {filename}.\n")
             plotTilings(tilings_this_page, filename, plotting_sym_groups)
+        return
            
     (colors, PLT_SIZE, lw_ratio, xticks, yticks, major_linewidth, minor_x_ticks, minor_y_ticks) = computeSymmetryPlotParams(tilings) if (plotting_sym_groups) else computePlotParams(tilings)
     fig = plt.figure()
@@ -710,16 +711,16 @@ def plotTest(num, testing_sym_column):
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
     WIDTH = 3
-    HEIGHT = 3
+    HEIGHT = 4
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
     PRINT_PROGRESS = True             # Recommended for large grids
-    SHOW_IMAGE = False                 
+    SHOW_IMAGE = True
     SYM_GROUPS_SINGLE_COLUMN = False 
     GAP_BETWEEN_SYM_GROUPS = 2
-    MAX_CELL_LENGTH_PER_PAGE = 2500  # 1200 works(4x4 287 1 column) 400 for 4x4 2500 should also work (~250K 5x5 tilings in a square)
+    MAX_CELL_LENGTH_PER_PAGE = 24  # 2500 works (~250K 5x5 tilings in a square)
     OUTPUT_DIRECTORY = "Outputs"
     ###########################################################################
     run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE)
     # plotTest(40, True)
-
+#NOTE: BUG: Run this file and see "sym_order_3x4_55_page_10_55_55.png". When printing a single sym_group, does not print it in a row. Not only that, but duplicate prints tilings. Might be related to the fact that 3x4 is not a square.

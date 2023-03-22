@@ -723,4 +723,4 @@ if(__name__ == "__main__"):
     ###########################################################################
     run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE)
     # plotTest(40, True)
-#NOTE: BUG: Run this file and see "sym_order_3x4_55_page_10_55_55.png". When printing a single sym_group, does not print it in a row. Not only that, but duplicate prints tilings. Might be related to the fact that 3x4 is not a square.
+

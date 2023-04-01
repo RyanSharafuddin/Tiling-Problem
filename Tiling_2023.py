@@ -35,21 +35,24 @@ def setupOutputGlobals(printIndividualTilings, printFilterTest, printProgress):
     PRINT_FILTER_TEST = printFilterTest
     PRINT_PROGRESS = printProgress
 
+def rgb(r,g,b):
+    #Make it easy to use VS Code's built-in color picker to quickly change colors
+    return([r,g,b])
 #Always define COLORS, even outside setupOutputGlobals
 COLORS = np.array([
-    [125, 125, 125], #7d7d7d  # Color for the monominos
-    [224, 130, 7],   #e08207
-    [48, 173, 10],   #30ad0a   
-    [9, 17, 173],    #0911ad
-    [173, 9, 159],   #ad099f
-    [217, 11, 11],   #d90b0b
-    [21, 176, 155],  #15b09b
-    [28, 74, 33],    #1c4a21
-    [172, 136, 191], #ac88bf
-    [69, 5, 23],     #450517
-    [255, 244, 28],  #fff41c
-    [7, 227, 209],   #07e3d1
-    [13, 54, 4]      #0d3604
+    rgb(125, 125, 125),  # Color for the monominos
+    rgb(224, 130, 7),
+    rgb(48, 173, 10),
+    rgb(9, 17, 173),
+    rgb(173, 9, 159),
+    rgb(217, 11, 11),
+    rgb(21, 176, 155),
+    rgb(28, 74, 33),
+    rgb(172, 136, 191),
+    rgb(69, 5, 23),
+    rgb(255, 244, 28),
+    rgb(7, 227, 209),
+    rgb(13, 54, 4),
     #NOTE: will need to add more colors if want to graph tilings with more than 12 L tiles. Consider picking new colors randomly.
     ], dtype=int)
 
@@ -697,7 +700,7 @@ def run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, P
     print(f"There are: {pad_num_str(total, pad_to)} tilings.")
     print(f"There are: {pad_num_str(sym_unique, pad_to)} symmetrically unique tilings.")
     if(SHOW_IMAGE):
-        print("Creating images . . .")
+        print("Creating images . . .\n")
         plotAllTilings(tilings_original_order, tilings_ordered_by_symmetry_lol)
         print("Finished creating images.")
     return((tilings_original_order, symmetry_representations)) #only used for pytest functions
@@ -710,7 +713,7 @@ def plotTest(num, testing_sym_column):
 
 if(__name__ == "__main__"):
     ###########################   CONFIGURATION    ############################
-    WIDTH = 3
+    WIDTH = 4
     HEIGHT = 4
     PRINT_INDIVIDUAL_TILINGS = True
     PRINT_FILTER_TEST = False          # Not recommended for large grids (> 5x5)
@@ -718,9 +721,7 @@ if(__name__ == "__main__"):
     SHOW_IMAGE = True
     SYM_GROUPS_SINGLE_COLUMN = False 
     GAP_BETWEEN_SYM_GROUPS = 2
-    MAX_CELL_LENGTH_PER_PAGE = 2500  # 2500 works (~250K 5x5 tilings in a square)
+    MAX_CELL_LENGTH_PER_PAGE = 2600  # 2500 works (~250K 5x5 tilings in a square)
     OUTPUT_DIRECTORY = "Outputs"
     ###########################################################################
     run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE)
-    # plotTest(40, True)
-

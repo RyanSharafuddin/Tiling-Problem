@@ -401,7 +401,7 @@ def transformSymRep(symmetry_representation, num_times, height, width, flip):
 
 def getTilingsFilteredForSymmetry(tilings_container):
     original_tilings, symmetry_representations = tilings_container
-    original_tiling_sym_indexes = np.empty(len(original_tilings), dtype=np.short) #@ list[i] contains j means original_tilings[i] is symmetric to original_tilings[j], or is first of its sym_group if j = -1
+    original_tiling_sym_indexes = np.empty(len(original_tilings), dtype=np.int32) #@ list[i] contains j means original_tilings[i] is symmetric to original_tilings[j], or is first of its sym_group if j = -1
     tilings_ordered_by_symmetry_lol = [] #a list of lists. Each list is a sym_group of tilings
 
     filtered_tiling_symmetry_representations = dict() #dict from sym_rep to a tuple: (index in original_tilings, index of the list in lol to append to)

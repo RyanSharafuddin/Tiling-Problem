@@ -672,9 +672,6 @@ def plotAllTilings(tilings, tilings_ordered_by_symmetry_lol):
 
     plotTilings(tilings_ordered_by_symmetry_lol, os.path.join(FILE_PREFIX, f"sym_order_{WIDTH}x{HEIGHT}_{len(tilings_ordered_by_symmetry_lol)}.png"), True)
 
-def pad_num_str(num, length):
-    return(str(num).rjust(length, ' '))
-
 def run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, PRINT_PROGRESS, SHOW_IMAGE):
     setupCalculationGlobals(givenWidth = WIDTH, givenHeight = HEIGHT)
     setupOutputGlobals(printIndividualTilings = PRINT_INDIVIDUAL_TILINGS, printFilterTest = PRINT_FILTER_TEST, printProgress = PRINT_PROGRESS)
@@ -696,9 +693,9 @@ def run_everything(WIDTH, HEIGHT, PRINT_INDIVIDUAL_TILINGS, PRINT_FILTER_TEST, P
     print(f"Completed calculations for {WIDTH} x {HEIGHT} grid.")
     total = len(tilings_original_order)
     sym_unique = len(tilings_ordered_by_symmetry_lol)
-    pad_to = max(len(str(total)), len(str(sym_unique)))
-    print(f"There are: {pad_num_str(total, pad_to)} tilings.")
-    print(f"There are: {pad_num_str(sym_unique, pad_to)} symmetrically unique tilings.")
+    width = len(f"{max(total, sym_unique):,}")
+    print(f"There are: {total:>{width},} tilings.")
+    print(f"There are: {sym_unique:>{width},} symmetrically unique tilings.")
     if(SHOW_IMAGE):
         print("Creating images . . .\n")
         plotAllTilings(tilings_original_order, tilings_ordered_by_symmetry_lol)
